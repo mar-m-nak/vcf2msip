@@ -27,22 +27,18 @@ pub struct Vcf {
 
 impl Vcf {
 
-    /// initialize buffer
-    pub fn new() -> Self{
-        Self{data: String::with_capacity(1048576)}
-    }
-
     /// load vcf file to buffer
-    pub fn load(&mut self, filename: &str) -> Result<(), i32> {
+    pub fn new(filename: &str) -> Result<Self, i32> {
         let hfile = match File::open(&filename) {
             Ok(h) => h,
             _ => return Err(-1),
         };
         let mut reader = BufReader::new(&hfile);
-        if let Err(_) = reader.read_to_string(&mut self.data) {
+        let mut vcf = Self { data: String::with_capacity(1048576) };
+        if let Err(_) = reader.read_to_string(&mut vcf.data) {
             return Err(-1);
         }
-        Ok(())
+        Ok(vcf)
     }
 
     /// return split vcards

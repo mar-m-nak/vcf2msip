@@ -7,10 +7,10 @@ use vcf_parser::{Contact, Vcf}; //, File};
 fn main() {
     // open and read vcf file
     let _filename = "./testfiles/contacts.vcf";
-    let mut vcf = Vcf::new();
-    if let Err(_) = vcf.load(&_filename) {
-        panic!("ファイルが開けません");
-    }
+    let vcf = match Vcf::new(&_filename) {
+        Ok(vcf) => vcf,
+        _ => panic!("ファイルが開けません"),
+    };
 
     // loop vcards
     let mut count = 0;
