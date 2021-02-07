@@ -19,12 +19,19 @@ fn main() {
         // parse contact from one vcard
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
-        println!("{} - {:?}", ct.name_index(), ct.full_name());
+        let name = format!("{} - {:?}", ct.name_index(), ct.full_name());
         count += 1;
 
         // loop telephone
         for telephone in ct.tel_iter() {
-            println!("{}:{}", telephone.get_type(), telephone.get_number());
+            let number = telephone.get_number();
+            let tel_type = if telephone.get_type().is_empty() {
+                "".to_string()
+            } else {
+                format!(" ({})", telephone.get_type())
+            };
+            let xml = Contact::fmt_xml(name.as_ref(), tel_type.as_ref(), number);
+            println!("{}", xml);
         }
     }
     println!("all: {}", count);
