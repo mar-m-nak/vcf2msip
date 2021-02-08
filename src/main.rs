@@ -1,6 +1,6 @@
 mod vcf_parser;
 
-use std::{env, fs::{OpenOptions, remove_file}, path::Path};
+use std::{cmp::Ordering, env, fs::{OpenOptions, remove_file}, path::Path};
 use std::io::prelude::*;
 use std::process::exit;
 use vcf_parser::*;
@@ -11,14 +11,14 @@ struct Args {
     save_file_name: String,
     is_help: bool,
     is_merge: bool,
-    is_nobup: bool,
-    is_relog: bool,
+    is_no_bup: bool,
+    is_renew_logs: bool,
 }
 
 const ARG_HELP: &'static [&'static str] = &["-h", "-v", "--help", "--version"];
 const ARG_MERGE: &'static [&'static str] = &["-m", "--merge"];
-const ARG_OVERWRITE: &'static [&'static str] = &["-n", "--nobup"];
-const ARG_RENEWLOGS: &'static [&'static str] = &["-r", "--renewlogs"];
+const ARG_OVERWRITE: &'static [&'static str] = &["-n", "--no-bup"];
+const ARG_RENEWLOGS: &'static [&'static str] = &["-r", "--renew-logs"];
 
 impl Args {
     fn get_params() -> Self {
@@ -26,15 +26,14 @@ impl Args {
         let mut file_count = 0;
         for (i, arg) in env::args().enumerate() {
             if i == 0 { continue; }
-            let arg = arg.to_lowercase();
             if ARG_HELP.contains(&arg.as_ref()) {
                 args.is_help = true;
             } else if ARG_MERGE.contains(&arg.as_ref()) {
                 args.is_merge = true;
             } else if ARG_OVERWRITE.contains(&arg.as_ref()) {
-                args.is_nobup = true;
+                args.is_no_bup = true;
             } else if ARG_RENEWLOGS.contains(&arg.as_ref()) {
-                args.is_relog = true;
+                args.is_renew_logs = true;
             } else {
                 if file_count == 0 {
                     args.load_file_name = arg;
@@ -51,10 +50,16 @@ impl Args {
             args.is_help = true;
         }
         if let Some(s) = Path::new(&args.load_file_name).extension() {
-            if s != "vcf" { args.is_help = true; }
+            let ext = s.to_str().map_or("", |s| s);
+            if ext.to_lowercase().as_str() != "vcf" {
+                args.is_help = true;
+            }
         }
         if let Some(s) = Path::new(&args.save_file_name).file_name() {
-            if s != "contacts.xml" { args.is_help = true; }
+            let fname = s.to_str().map_or("", |s| s);
+            if fname.to_lowercase().as_str() != "contacts.xml" {
+                args.is_help = true;
+            }
         }
         args
     }
