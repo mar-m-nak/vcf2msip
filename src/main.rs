@@ -14,6 +14,11 @@ struct Args {
     is_overwrite: bool, // = not create backup
 }
 
+const ARG_HELP: &'static [&'static str] = &["-h", "-v", "--help", "--version"];
+const ARG_MERGE: &'static [&'static str] = &["-m", "--merge"];
+const ARG_OVERWRITE: &'static [&'static str] = &["-o", "--overwrite"];
+const ARG_RENEWLOGS: &'static [&'static str] = &["-r", "--renewlogs"];
+
 impl Args {
     fn get_params() -> Self {
         let mut args = Args::default();
@@ -21,11 +26,13 @@ impl Args {
         for (i, arg) in env::args().enumerate() {
             if i == 0 { continue; }
             let arg = arg.to_lowercase();
-            if arg == "-h" || arg == "-v" || arg == "--help" || arg == "--version" {
+            if ARG_HELP.contains(&arg.as_ref()) {
                 args.is_help = true;
-            } else if arg == "-m" || arg == "--merge" {
+            } else if ARG_MERGE.contains(&arg.as_ref()) {
                 args.is_merge = true;
-            } else if arg == "-o" || arg == "--overwrite" {
+            } else if ARG_OVERWRITE.contains(&arg.as_ref()) {
+                args.is_overwrite = true;
+            } else if ARG_RENEWLOGS.contains(&arg.as_ref()) {
                 args.is_overwrite = true;
             } else {
                 if file_count == 0 {
@@ -67,6 +74,7 @@ fn main() {
         println!("-h --help -v --version ... This message.");
         println!("-m --merge             ... Merge to exist xml from vcf.");
         println!("-o --overwrite         ... Overwrite xml. (not create backup)");
+        println!("-r --renewlogs         ... Renew name in logs tab.");
         println!("\n");
         return ();
     }
