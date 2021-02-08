@@ -6,21 +6,29 @@ use std::process::exit;
 use vcf_parser::*;
 
 fn main() {
+    if let Err(e) = conv() {
+        print_err_msg(e);
+        exit(e);
+    };
+}
+
+fn conv() -> Result<(), i32> {
+
     // open and read vcf file
     let _filename = "./testfiles/contacts.vcf";
     let vcf = match Vcf::new(&_filename) {
         Ok(vcf) => vcf,
-        Err(e) => { print_err_msg(e); exit(e); }
+        Err(e) => { return Err(e); },
     };
 
     // create micro-sip xml file
     let _filename = "./testfiles/output_test.xml";
     let mut hxmlfile = match create_xml_file(&_filename, false) {
         Ok(h) => h,
-        _ => { print_err_msg(_ERR_CREATE_FILE); exit(_ERR_CREATE_FILE); }
+        Err(e) => { return Err(e); }
     };
-    if let Err(e) = writeln!(hxmlfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
-        eprintln!("Couldn't write to file: {}", e);
+    if let Err(_) = writeln!(hxmlfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
+        return Err(_ERR_WRITE_FILE);
     }
 
     // loop at vcards
@@ -43,9 +51,8 @@ fn main() {
             };
             // write to xml file
             let xml = Contact::fmt_xml(name.as_ref(), tel_type.as_ref(), number);
-            if let Err(e) = writeln!(hxmlfile, "{}\r", xml) {
-                eprintln!("Couldn't write to file: {}", e);
-                panic!("書き込み失敗");
+            if let Err(_) = writeln!(hxmlfile, "{}\r", xml) {
+                continue;
             }
             count_number += 1;
         }
@@ -53,9 +60,11 @@ fn main() {
     }
     println!("contact: {} / number: {}", count_contact, count_number);
 
-    if let Err(e) = writeln!(hxmlfile, "</contacts>\r") {
-        eprintln!("Couldn't write to file: {}", e);
+    if let Err(_) = writeln!(hxmlfile, "</contacts>\r") {
+        return Err(_ERR_WRITE_FILE);
     }
+
+    Ok(())
 }
 
 /// touch output xml file with overwrite or append
