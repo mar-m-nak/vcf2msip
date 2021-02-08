@@ -1,4 +1,4 @@
-use std::fs::File;
+pub use std::fs::File;
 use std::io::{BufReader, Read};
 use kanaria::{string::UCSStr, utils::ConvertTarget};
 use regex::Regex;

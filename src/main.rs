@@ -15,13 +15,7 @@ fn main() {
 
     // create micro-sip xml file
     let _filename = "./testfiles/output_test.xml";
-    let mut hxmlfile = match OpenOptions::new()
-        .create(true)
-        .write(true)
-        .append(false)
-        .truncate(true)
-        .open(&_filename)
-    {
+    let mut hxmlfile = match create_xml_file(&_filename, false) {
         Ok(h) => h,
         _ => { print_err_msg(_ERR_CREATE_FILE); exit(_ERR_CREATE_FILE); }
     };
@@ -36,22 +30,19 @@ fn main() {
         // parse one contact
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
-        let name_str =
-            format!("{} - {}", ct.name_index(), ct.full_name())
+        let name = format!("{} - {}", ct.name_index(), ct.full_name())
             .replace("\"", "");
-        let name: &str = name_str.as_ref();
+
         // loop at telephone in this contact
         for tel in ct.tel_iter() {
             let number = tel.get_number();
-            let tel_type_str = if tel.get_type().is_empty() {
+            let tel_type = if tel.get_type().is_empty() {
                 "".to_string()
             } else {
                 format!(" ({})", tel.get_type())
             };
-            let tel_type: &str = tel_type_str.as_ref();
             // write to xml file
-            let xml = Contact::fmt_xml(name, tel_type, number);
-            // println!("{}", xml);
+            let xml = Contact::fmt_xml(name.as_ref(), tel_type.as_ref(), number);
             if let Err(e) = writeln!(hxmlfile, "{}\r", xml) {
                 eprintln!("Couldn't write to file: {}", e);
                 panic!("書き込み失敗");
@@ -66,6 +57,21 @@ fn main() {
         eprintln!("Couldn't write to file: {}", e);
     }
 }
+
+/// touch output xml file with overwrite or append
+fn create_xml_file(filename: &str, is_append: bool) -> Result<File, i32> {
+    match OpenOptions::new()
+        .create(true)
+        .write(true)
+        .append(is_append)
+        .truncate(!is_append)
+        .open(&filename)
+    {
+        Ok(h) => Ok(h),
+        _ => Err(_ERR_CREATE_FILE),
+    }
+}
+
 
 /// print my error message
 fn print_err_msg(e: i32) {
