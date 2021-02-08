@@ -9,3 +9,9 @@ edition = "2018"
 [dependencies]
 regex  = "1"
 kanaria = "0.2.0"
+
+[profile.release]
+opt-level  =  "s"
+lto = true
+codegen-units = 1
+panic = 'abort'

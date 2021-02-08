@@ -1,15 +1,16 @@
 mod vcf_parser;
 
-use std::fs::OpenOptions;
+use std::fs::{OpenOptions, remove_file};
 use std::io::prelude::*;
-use vcf_parser::{Contact, Vcf}; //, File};
+use std::process::exit;
+use vcf_parser::*;
 
 fn main() {
     // open and read vcf file
     let _filename = "./testfiles/contacts.vcf";
     let vcf = match Vcf::new(&_filename) {
         Ok(vcf) => vcf,
-        _ => panic!("ファイルが開けません"),
+        Err(e) => { print_err_msg(e); exit(e); }
     };
 
     // create micro-sip xml file
@@ -22,7 +23,7 @@ fn main() {
         .open(&_filename)
     {
         Ok(h) => h,
-        _ => panic!("ファイルが作成できません"),
+        _ => { print_err_msg(_ERR_CREATE_FILE); exit(_ERR_CREATE_FILE); }
     };
     if let Err(e) = writeln!(hxmlfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
         eprintln!("Couldn't write to file: {}", e);
@@ -64,6 +65,16 @@ fn main() {
     if let Err(e) = writeln!(hxmlfile, "</contacts>\r") {
         eprintln!("Couldn't write to file: {}", e);
     }
+}
 
-
+/// print my error message
+fn print_err_msg(e: i32) {
+    let msg = match e {
+        _ERR_FILE_NOT_FOUND => "ファイルが見つかりません",
+        _ERR_CREATE_FILE => "ファイル作成に失敗しました",
+        _ERR_READ_FILE => "ファイル読み込みに失敗しました",
+        _ERR_WRITE_FILE => "ファイル書き込みに失敗しました",
+        _ => "",
+    };
+    if !msg.is_empty() { println!("{}", msg) } else { println!("不明なエラーです {}", e) };
 }

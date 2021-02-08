@@ -1,7 +1,12 @@
-pub use std::fs::File;
+use std::fs::File;
 use std::io::{BufReader, Read};
 use kanaria::{string::UCSStr, utils::ConvertTarget};
 use regex::Regex;
+
+pub const _ERR_FILE_NOT_FOUND:i32 = 1;
+pub const _ERR_CREATE_FILE:i32 = 2;
+pub const _ERR_WRITE_FILE:i32 = 3;
+pub const _ERR_READ_FILE:i32 = 4;
 
 #[derive(Debug)]
 pub struct Telephone {
@@ -31,12 +36,12 @@ impl Vcf {
     pub fn new(filename: &str) -> Result<Self, i32> {
         let hfile = match File::open(&filename) {
             Ok(h) => h,
-            _ => return Err(-1),
+            _ => return Err(_ERR_FILE_NOT_FOUND),
         };
         let mut reader = BufReader::new(&hfile);
         let mut vcf = Self { data: String::with_capacity(1048576) };
         if let Err(_) = reader.read_to_string(&mut vcf.data) {
-            return Err(-1);
+            return Err(_ERR_READ_FILE);
         }
         Ok(vcf)
     }
