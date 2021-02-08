@@ -135,7 +135,7 @@ impl Contact {
 
     /// return formated one xml line
     pub fn fmt_xml(name: &str, tel_type: &str, number: &str) -> String {
-        let xml = "<contact name=\"%name%%type%\" number=\"%number%\" firstname=\"\" lastname=\"\" phone=\"\" mobile=\"\" email=\"\" address=\"\" city=\"\" state=\"\" zip=\"\" comment=\"\" id=\"\" info=\"\" presence=\"0\" directory=\"0\"/>\n";
+        let xml = r#"<contact name="%name%%type%" number="%number%" firstname="" lastname="" phone="" mobile="" email="" address="" city="" state="" zip="" comment="" id="" info="" presence="0" directory="0"/>"#;
         xml .replace("%name%", name)
             .replace("%type%", tel_type)
             .replace("%number%", number)
