@@ -11,12 +11,13 @@ struct Args {
     save_file_name: String,
     is_help: bool,
     is_merge: bool,
-    is_overwrite: bool, // = not create backup
+    is_nobup: bool,
+    is_relog: bool,
 }
 
 const ARG_HELP: &'static [&'static str] = &["-h", "-v", "--help", "--version"];
 const ARG_MERGE: &'static [&'static str] = &["-m", "--merge"];
-const ARG_OVERWRITE: &'static [&'static str] = &["-o", "--overwrite"];
+const ARG_OVERWRITE: &'static [&'static str] = &["-n", "--nobup"];
 const ARG_RENEWLOGS: &'static [&'static str] = &["-r", "--renewlogs"];
 
 impl Args {
@@ -31,9 +32,9 @@ impl Args {
             } else if ARG_MERGE.contains(&arg.as_ref()) {
                 args.is_merge = true;
             } else if ARG_OVERWRITE.contains(&arg.as_ref()) {
-                args.is_overwrite = true;
+                args.is_nobup = true;
             } else if ARG_RENEWLOGS.contains(&arg.as_ref()) {
-                args.is_overwrite = true;
+                args.is_relog = true;
             } else {
                 if file_count == 0 {
                     args.load_file_name = arg;
@@ -70,11 +71,15 @@ fn main() {
             \"path\\to\\save\\Contacts.xml\"",
             PKG_NAME
         );
-        println!("\n[OPTIONS]");
-        println!("-h --help -v --version ... This message.");
-        println!("-m --merge             ... Merge to exist xml from vcf.");
-        println!("-o --overwrite         ... Overwrite xml. (not create backup)");
-        println!("-r --renewlogs         ... Renew name in logs tab.");
+        println!("");
+        print!("{:?}", ARG_MERGE);
+        println!("\t... Merge to exist xml from vcf.");
+        print!("{:?}", ARG_OVERWRITE);
+        println!("\t... Overwrite xml. (not create backup)");
+        print!("{:?}", ARG_RENEWLOGS);
+        println!("\t... Renew name in logs tab.");
+        print!("{:?}", ARG_HELP);
+        println!("\t... This message.");
         println!("\n");
         return ();
     }
