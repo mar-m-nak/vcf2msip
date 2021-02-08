@@ -1,29 +1,96 @@
 mod vcf_parser;
 
-use std::fs::{OpenOptions, remove_file};
+use std::{env, fs::{OpenOptions, remove_file}, path::Path};
 use std::io::prelude::*;
 use std::process::exit;
 use vcf_parser::*;
 
+#[derive(Debug, Default)]
+struct Args {
+    load_file_name: String,
+    save_file_name: String,
+    is_help: bool,
+    is_merge: bool,
+    is_overwrite: bool, // = not create backup
+}
+
+impl Args {
+    fn get_params() -> Self {
+        let mut args = Args::default();
+        let mut file_count = 0;
+        for (i, arg) in env::args().enumerate() {
+            if i == 0 { continue; }
+            let arg = arg.to_lowercase();
+            if arg == "-h" || arg == "-v" || arg == "--help" || arg == "--version" {
+                args.is_help = true;
+            } else if arg == "-m" || arg == "--merge" {
+                args.is_merge = true;
+            } else if arg == "-o" || arg == "--overwrite" {
+                args.is_overwrite = true;
+            } else {
+                if file_count == 0 {
+                    args.load_file_name = arg;
+                } else if file_count == 1 {
+                    args.save_file_name = arg;
+                } else {
+                    args.is_help = true;
+                }
+                file_count += 1;
+            }
+        }
+        // file arg miss match are help
+        if file_count != 2 {
+            args.is_help = true;
+        }
+        if let Some(s) = Path::new(&args.load_file_name).extension() {
+            if s != "vcf" { args.is_help = true; }
+        }
+        if let Some(s) = Path::new(&args.save_file_name).file_name() {
+            if s != "contacts.xml" { args.is_help = true; }
+        }
+        args
+    }
+}
+
 fn main() {
-    if let Err(e) = conv() {
+    const PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
+    const PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
+    let args = Args::get_params();
+    if args.is_help {
+        println!("\n\n{} - Version {}\n----", PKG_NAME, PKG_VERSION);
+        println!("usage: {} [OPTIONS] \
+            \"path\\to\\load\\*.vcf\" \
+            \"path\\to\\save\\Contacts.xml\"",
+            PKG_NAME
+        );
+        println!("\n[OPTIONS]");
+        println!("-h --help -v --version ... This message.");
+        println!("-m --merge             ... Merge to exist xml from vcf.");
+        println!("-o --overwrite         ... Overwrite xml. (not create backup)");
+        println!("\n");
+        return ();
+    }
+
+    if let Err(e) = conv(&args) {
         print_err_msg(e);
         exit(e);
     };
 }
 
-fn conv() -> Result<(), i32> {
+fn conv(args: &Args) -> Result<(), i32> {
 
     // open and read vcf file
-    let _filename = "./testfiles/contacts.vcf";
-    let vcf = match Vcf::new(&_filename) {
+    // let filename = "./testfiles/contacts.vcf";
+    let filename = args.load_file_name.as_ref();
+    let vcf = match Vcf::new(&filename) {
         Ok(vcf) => vcf,
         Err(e) => { return Err(e); },
     };
 
     // create micro-sip xml file
-    let _filename = "./testfiles/output_test.xml";
-    let mut hxmlfile = match create_xml_file(&_filename, false) {
+    // let filename = "./testfiles/Contacts.xml";
+    let filename = args.save_file_name.as_ref();
+    let mut hxmlfile = match create_xml_file(&filename, false) {
         Ok(h) => h,
         Err(e) => { return Err(e); }
     };
