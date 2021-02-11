@@ -5,12 +5,13 @@ use std::{cmp::Ordering, env, fs::{OpenOptions, remove_file}, path::Path};
 use std::io::prelude::*;
 use std::process::exit;
 use vcf_parser::*;
-use ini_io::IniIo;
+use ini_io::{IniIo, _ERR_DID_NOT_RUN_RENEW_LOGS};
 
 #[derive(Debug, Default)]
 struct Args {
     load_file_name: String,
     save_file_name: String,
+    microsip_ini_file: String,
     is_help: bool,
     is_merge: bool,
     is_no_bup: bool,
@@ -61,8 +62,15 @@ impl Args {
             let fname = s.to_str().map_or("", |s| s);
             if fname.to_lowercase().as_str() != "contacts.xml" {
                 args.is_help = true;
+            } else {
+                // make MicroSIP.ini path to same as xml path
+                if let Some(s) = Path::new(&args.save_file_name).parent() {
+                    let path = s.to_str().map_or("", |s| s);
+                    args.microsip_ini_file = format!("{}/MicroSIP.ini", path);
+                }
             }
         }
+        println!("{:?}", args);
         args
     }
 }
@@ -151,6 +159,44 @@ fn conv(args: &Args) -> Result<(), i32> {
         return Err(_ERR_WRITE_FILE);
     }
 
+    // renew logs name for MicroSIP.ini
+    if args.is_renew_logs {
+        let mut ini_io = match IniIo::new(&args.microsip_ini_file) {
+            Ok(iniio) => iniio,
+            Err(_) => { return Err(_ERR_DID_NOT_RUN_RENEW_LOGS) },
+        };
+        // println!("{:?}", ini_io);
+
+        for vcard in vcf.get_vcards() {
+            // parse one contact
+            let ct = Contact::new(&vcard);
+            if ct.is_empty() { continue; }
+            let name = ct.full_name().replace("\"", "");
+            // loop at telephone in this contact
+            for tel in ct.tel_iter() {
+                let number = tel.get_number();
+                let tel_type = if tel.get_type().is_empty() {
+                    "".to_string()
+                } else {
+                    format!(" ({})", tel.get_type())
+                };
+                let old_line = ini_io.get_match_number_line(number);
+                if !old_line.is_empty() {
+                    let new_name = format!("{}{}", name, tel_type);
+                    let new_line = IniIo::make_new_number_line(&old_line, &new_name);
+                    if !new_line.is_empty() {
+                        ini_io.replace(&old_line, &new_line);
+                    }
+                }
+            }
+        }
+        // println!("{:?}", ini_io);
+        if let Err(e) = ini_io.save() {
+            return Err(e);
+        }
+    }
+
+
     Ok(())
 }
 
@@ -176,6 +222,7 @@ fn print_err_msg(e: i32) {
         _ERR_CREATE_FILE => "ファイル作成に失敗しました",
         _ERR_READ_FILE => "ファイル読み込みに失敗しました",
         _ERR_WRITE_FILE => "ファイル書き込みに失敗しました",
+        _ERR_DID_NOT_RUN_RENEW_LOGS => "MicroSIP.ini は更新されませんでした",
         _ => "",
     };
     if !msg.is_empty() { println!("{}", msg) } else { println!("不明なエラーです {}", e) };
