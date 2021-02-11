@@ -1,11 +1,11 @@
 mod vcf_parser;
 mod ini_io;
 
-use std::{cmp::Ordering, env, fs::{OpenOptions, remove_file}, path::Path};
+use std::{env, fs::{OpenOptions, remove_file}, path::Path};
 use std::io::prelude::*;
 use std::process::exit;
 use vcf_parser::*;
-use ini_io::{IniIo, _ERR_DID_NOT_RUN_RENEW_LOGS};
+use ini_io::*;
 
 #[derive(Debug, Default)]
 struct Args {
@@ -165,8 +165,7 @@ fn conv(args: &Args) -> Result<(), i32> {
             Ok(iniio) => iniio,
             Err(_) => { return Err(_ERR_DID_NOT_RUN_RENEW_LOGS) },
         };
-        // println!("{:?}", ini_io);
-
+        // loop at vcards
         for vcard in vcf.get_vcards() {
             // parse one contact
             let ct = Contact::new(&vcard);
@@ -181,6 +180,7 @@ fn conv(args: &Args) -> Result<(), i32> {
                     format!(" ({})", tel.get_type())
                 };
                 let old_line = ini_io.get_match_number_line(number);
+                // replace MicroSIP.ini on buffer
                 if !old_line.is_empty() {
                     let new_name = format!("{}{}", name, tel_type);
                     let new_line = IniIo::make_new_number_line(&old_line, &new_name);
@@ -190,12 +190,12 @@ fn conv(args: &Args) -> Result<(), i32> {
                 }
             }
         }
-        // println!("{:?}", ini_io);
-        if let Err(e) = ini_io.saveu16test() {
+        // write renewed MicroSIP.ini
+        let filename = "./testfiles/MicroSIP_new.ini";
+        if let Err(e) = ini_io.save(&filename) {
             return Err(e);
         }
     }
-
 
     Ok(())
 }
@@ -223,6 +223,7 @@ fn print_err_msg(e: i32) {
         _ERR_READ_FILE => "ファイル読み込みに失敗しました",
         _ERR_WRITE_FILE => "ファイル書き込みに失敗しました",
         _ERR_DID_NOT_RUN_RENEW_LOGS => "MicroSIP.ini は更新されませんでした",
+        _ERR_WRITE_INI_FILE => "MicroSIP.ini の書き込みに失敗しました",
         _ => "",
     };
     if !msg.is_empty() { println!("{}", msg) } else { println!("不明なエラーです {}", e) };
