@@ -1,13 +1,10 @@
-use std::io::{BufWriter};
-
+use crate::error_flg;
 use crate::vcf_parser;
 
+use std::io::{BufWriter};
+use error_flg::*;
 use vcf_parser::*;
-// use widestring::U16String;
 use file_utils::write::Write as fu_write;
-
-pub const _ERR_DID_NOT_RUN_RENEW_LOGS:i32 = 101;
-pub const _ERR_WRITE_INI_FILE:i32 = 102;
 
 #[derive(Debug)]
 pub struct IniIo {
@@ -34,9 +31,6 @@ impl IniIo {
         // convert to utf8 string
         let ini_slice = ini_vec_u16.as_slice();
         let data = String::from_utf16_lossy(ini_slice);
-        // or use U16String crate
-        // let wstr = U16String::from_vec(ini_vec_u16);
-        // let data = wstr.to_string().unwrap();
         Ok(Self { data })
     }
 

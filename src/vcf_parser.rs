@@ -1,12 +1,10 @@
+use crate::error_flg;
+
 pub use std::fs::File;
 pub use std::io::{BufReader, Read};
 use kanaria::{string::UCSStr, utils::ConvertTarget};
 pub use regex::Regex;
-
-pub const _ERR_FILE_NOT_FOUND:i32 = 1;
-pub const _ERR_CREATE_FILE:i32 = 2;
-pub const _ERR_WRITE_FILE:i32 = 3;
-pub const _ERR_READ_FILE:i32 = 4;
+use error_flg::*;
 
 #[derive(Debug)]
 pub struct Telephone {
