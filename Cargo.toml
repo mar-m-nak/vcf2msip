@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 regex  = "1"
 kanaria = "0.2.0"
+# widestring = "0.4.3"
 
 [profile.release]
 opt-level  =  "s"

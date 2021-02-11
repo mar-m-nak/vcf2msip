@@ -1,9 +1,11 @@
 mod vcf_parser;
+mod ini_io;
 
 use std::{cmp::Ordering, env, fs::{OpenOptions, remove_file}, path::Path};
 use std::io::prelude::*;
 use std::process::exit;
 use vcf_parser::*;
+use ini_io::IniIo;
 
 #[derive(Debug, Default)]
 struct Args {
@@ -94,7 +96,7 @@ fn main() {
         exit(e);
     };
 }
-
+// TODO: args.is_renew_logs = true で ini の履歴の名前を書き換えたい
 fn conv(args: &Args) -> Result<(), i32> {
 
     // open and read vcf file

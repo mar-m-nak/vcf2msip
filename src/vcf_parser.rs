@@ -1,5 +1,5 @@
 pub use std::fs::File;
-use std::io::{BufReader, Read};
+pub use std::io::{BufReader, Read};
 use kanaria::{string::UCSStr, utils::ConvertTarget};
 use regex::Regex;
 
