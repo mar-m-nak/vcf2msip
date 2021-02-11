@@ -4,6 +4,7 @@ use crate::vcf_parser;
 
 use vcf_parser::*;
 // use widestring::U16String;
+// use file_utils::write::Write as fu_write;
 
 pub const _ERR_DID_NOT_RUN_RENEW_LOGS:i32 = 101;
 pub const _ERR_WRITE_INI_FILE:i32 = 102;
@@ -84,6 +85,23 @@ impl IniIo {
         if let Err(_) = writer.write_all(self.data.as_bytes()) {
             return Err(_ERR_WRITE_INI_FILE);
         };
+        Ok(())
+    }
+
+    pub fn saveu16test(&self) -> Result<(), i32> {
+        let filename = "./testfiles/MicroSIP_new.ini";
+        let mut hfile = match File::create(&filename) {
+            Ok(h ) => h,
+            _ => return Err(_ERR_FILE_NOT_FOUND),
+        };
+        let vec_u16: Vec<u16> = self.data.encode_utf16().collect();
+        for uu in &vec_u16 {
+            if let Err(_) = file_utils::write::Write::write_u16(&mut hfile, *uu) {
+                println!("書き込みエラー{}", uu);
+                return Err(_ERR_WRITE_INI_FILE);
+            };
+        }
+        println!("{:?}", vec_u16);
         Ok(())
     }
 

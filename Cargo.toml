@@ -10,6 +10,7 @@ edition = "2018"
 regex  = "1"
 kanaria = "0.2.0"
 # widestring = "0.4.3"
+file-utils = "0.1.5"
 
 [profile.release]
 opt-level  =  "s"

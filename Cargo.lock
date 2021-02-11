@@ -16,6 +16,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
+name = "file-utils"
+version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a69cd243d774aa2a8e70c5d06cc57f41559ad471e18bdd1766dd3bef7b83ab4"
+
+[[package]]
 name = "kanaria"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -67,6 +73,7 @@ dependencies = [
 name = "vcf2microsipxml"
 version = "0.1.0"
 dependencies = [
+ "file-utils",
  "kanaria",
  "regex",
 ]

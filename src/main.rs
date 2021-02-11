@@ -191,7 +191,7 @@ fn conv(args: &Args) -> Result<(), i32> {
             }
         }
         // println!("{:?}", ini_io);
-        if let Err(e) = ini_io.save() {
+        if let Err(e) = ini_io.saveu16test() {
             return Err(e);
         }
     }
