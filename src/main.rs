@@ -3,7 +3,7 @@ mod ini_io;
 mod error_flg;
 mod arg_and_help;
 
-use std::{env, fs::{OpenOptions, remove_file}, path::Path};
+use std::fs::{OpenOptions, remove_file};
 use std::io::prelude::*;
 use std::process::exit;
 use vcf_parser::*;
