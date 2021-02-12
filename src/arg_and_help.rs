@@ -1,5 +1,5 @@
-pub use std::path::MAIN_SEPARATOR;
-pub use std::{env, path::Path};
+use crate::file_fns;
+use file_fns::*;
 
 pub const ARG_HELP: &'static [&'static str] = &["-h", "-v", "--help", "--version"];
 pub const ARG_MERGE: &'static [&'static str] = &["-m", "--merge"];
