@@ -36,13 +36,7 @@ impl IniIo {
 
     /// return line string in match number from ini
     pub fn get_match_number_line(&self, number: &str) -> String {
-        let mut fix_number = String::with_capacity(16);
-        for c in number.chars() {
-            if c.is_numeric() {
-                fix_number = format!("{}{}", fix_number, c);
-            }
-        };
-        let pat = format!(r"(?m)^\d={};.*$", fix_number);
+        let pat = format!(r"(?m)^\d={};.*$", fix_number(&number));
         let re = Regex::new(&pat).unwrap();
         let hit_line = match re.captures(&self.data) {
             None => { return  "".to_string() },

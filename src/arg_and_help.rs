@@ -37,6 +37,7 @@ impl Args {
             } else if ARG_RENEWLOGS.contains(&arg.as_ref()) {
                 args.is_renew_logs = true;
             } else {
+                // TODO: パスセパレータをOS用に置換
                 if file_count == 0 {
                     args.load_file_name = arg;
                 } else if file_count == 1 {

@@ -3,6 +3,7 @@ mod ini_io;
 mod error_flg;
 mod arg_and_help;
 mod file_fns;
+mod xml_perser;
 
 use std::process::exit;
 use vcf_parser::*;
@@ -10,8 +11,11 @@ use ini_io::*;
 use error_flg::*;
 use arg_and_help::*;
 use file_fns::*;
+use xml_perser::*;
 
 fn main() {
+    // cargo run -- -r .\testfiles\contacts.vcf .\testfiles\Contacts.xml
+
     let args = Args::get_params();
     if args.is_help() {
         args.print_help();
@@ -32,30 +36,40 @@ fn conv(args: &Args) -> Result<(), i32> {
         return Err(_ERR_FILE_NOT_FOUND);
     }
 
+    // get MicroSIP Contacts
+    let mut sip_contacts = if args.is_merge() {
+        match SipContacts::new(&args.save_file_name()) {
+            Ok(sc) => sc,
+            Err(e) => { return Err(e); },
+        }
+    } else {
+        SipContacts::empty()
+    };
+
     // open and read vcf file
-    // let filename = "./testfiles/contacts.vcf";
     let vcf = match Vcf::new(&args.load_file_name()) {
         Ok(vcf) => vcf,
         Err(e) => { return Err(e); },
     };
 
-    // create micro-sip xml file
-    // let filename = "./testfiles/Contacts.xml";
+    // output new micro-sip xml to temporaly file
     let tmp_filename = make_tmp_filename(&args.save_file_name());
     let mut hfile = match create_file(&tmp_filename, false) {
         Ok(h) => h,
         Err(e) => { return Err(e); }
     };
-    if let Err(e) = output_xml_file(&vcf, &mut hfile) {
+    if let Err(e) = output_xml_file(&vcf, &mut hfile, &mut sip_contacts) {
         delete_file(&tmp_filename);
         return Err(e);
     }
+    // backup original micro-sip xml, if necessary
     if !args.is_no_bup() {
         if let Err(e) = file_backup(&args.save_file_name()) {
             delete_file(&tmp_filename);
             return Err(e);
         }
     }
+    // apply tempolary file to true micro-sip xml file
     if let Err(_) = rename(&tmp_filename, &args.save_file_name()) {
         delete_file(&tmp_filename);
         return Err(_ERR_FIX_FILE_COPY);
@@ -93,14 +107,15 @@ fn conv(args: &Args) -> Result<(), i32> {
 }
 
 /// write to xml file
-fn output_xml_file(vcf: &Vcf, hfile: &mut File) -> Result<(), i32> {
+fn output_xml_file(vcf: &Vcf, hfile: &mut File, sip_contacts: &mut SipContacts) -> Result<(), i32> {
     // write header
     if let Err(_) = writeln!(hfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
         return Err(_ERR_WRITE_FILE);
     }
     // loop at vcards
-    let mut count_contact = 0;
-    let mut count_number = 0;
+    let mut count_contact: usize = 0;
+    let mut count_number: usize = 0;
+    let mut count_merge: usize = 0;
     for vcard in vcf.get_vcards() {
         // parse one contact
         let ct = Contact::new(&vcard);
@@ -115,8 +130,12 @@ fn output_xml_file(vcf: &Vcf, hfile: &mut File) -> Result<(), i32> {
             } else {
                 format!(" ({})", tel.get_type())
             };
+            // clear original contact if exist
+            if !sip_contacts.is_empty() {
+                sip_contacts.clear_exist(&number);
+            };
             // write element
-            let xml = Contact::fmt_xml(name.as_ref(), tel_type.as_ref(), number);
+            let xml = Contact::fmt_xml(&name, tel_type.as_ref(), &number);
             if let Err(_) = writeln!(hfile, "{}\r", xml) {
                 continue;
             }
@@ -124,11 +143,24 @@ fn output_xml_file(vcf: &Vcf, hfile: &mut File) -> Result<(), i32> {
         }
         count_contact += 1;
     }
+    // merge remaining original contact
+    if !sip_contacts.is_empty() {
+        let tel_type = "";
+        for (sct_fix_number, number, name) in sip_contacts.data() {
+            if sct_fix_number.is_empty() { continue; }
+            // write element
+            let xml = Contact::fmt_xml(&name, tel_type, &number);
+            if let Err(_) = writeln!(hfile, "{}\r", xml) {
+                continue;
+            }
+            count_merge += 1;
+        }
+    }
     // write footer
     if let Err(_) = writeln!(hfile, "</contacts>\r") {
         return Err(_ERR_WRITE_FILE);
     }
-    println!("contact: {} / number: {}", count_contact, count_number);
+    println!("contact: {} / number: {} / merge: {}", count_contact, count_number, count_merge);
     Ok(())
 }
 

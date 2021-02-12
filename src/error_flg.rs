@@ -26,3 +26,14 @@ pub fn print_err_msg(e: i32) {
     };
     if !msg.is_empty() { println!("{}", msg) } else { println!("不明なエラーです {}", e) };
 }
+
+/// return numeric only number 
+pub fn fix_number(number: &str) -> String {
+    let mut fix_number = String::with_capacity(16);
+    for c in number.chars() {
+        if c.is_numeric() {
+            fix_number = format!("{}{}", fix_number, c);
+        }
+    };
+    fix_number
+}
