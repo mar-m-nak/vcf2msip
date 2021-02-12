@@ -63,29 +63,12 @@ fn conv(args: &Args) -> Result<(), i32> {
 
     // renew logs name for MicroSIP.ini
     if args.is_renew_logs() {
+        // read ini file to buffer in IniIo
         let mut ini_io = match IniIo::new(&args.microsip_ini_file()) {
             Ok(iniio) => iniio,
             Err(_) => { return Err(_ERR_DID_NOT_RUN_RENEW_LOGS) },
         };
-        // loop at vcards
-        for vcard in vcf.get_vcards() {
-            // parse one contact
-            let ct = Contact::new(&vcard);
-            if ct.is_empty() { continue; }
-            let name = ct.full_name().replace("\"", "");
-            // loop at telephone in this contact
-            for tel in ct.tel_iter() {
-                let old_line = ini_io.get_match_number_line(tel.get_number());
-                // replace MicroSIP.ini on buffer
-                if !old_line.is_empty() {
-                    let new_name = format!("{} ({})", name, tel.get_type());
-                    let new_line = IniIo::make_new_number_line(&old_line, &new_name);
-                    if !new_line.is_empty() {
-                        ini_io.replace(&old_line, &new_line);
-                    }
-                }
-            }
-        }
+        renew_ini_buffer(&vcf, &mut ini_io);
         // write renewed MicroSIP.ini to tempolary file
         let tmp_filename = make_tmp_filename(&args.microsip_ini_file());
         if let Err(e) = ini_io.save(&tmp_filename) {
@@ -147,4 +130,27 @@ fn output_xml_file(vcf: &Vcf, hfile: &mut File) -> Result<(), i32> {
     }
     println!("contact: {} / number: {}", count_contact, count_number);
     Ok(())
+}
+
+/// replace MicroSIP.ini on buffer in IniIo
+fn renew_ini_buffer(vcf: &Vcf, ini_io: &mut IniIo) {
+    // loop at vcards
+    for vcard in vcf.get_vcards() {
+        // parse one contact
+        let ct = Contact::new(&vcard);
+        if ct.is_empty() { continue; }
+        let name = ct.full_name().replace("\"", "");
+        // loop at telephone in this contact
+        for tel in ct.tel_iter() {
+            let old_line = ini_io.get_match_number_line(tel.get_number());
+            // replace MicroSIP.ini on buffer
+            if !old_line.is_empty() {
+                let new_name = format!("{} ({})", name, tel.get_type());
+                let new_line = IniIo::make_new_number_line(&old_line, &new_name);
+                if !new_line.is_empty() {
+                    ini_io.replace(&old_line, &new_line);
+                }
+            }
+        }
+    }
 }
