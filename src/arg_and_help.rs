@@ -37,11 +37,11 @@ impl Args {
             } else if ARG_RENEWLOGS.contains(&arg.as_ref()) {
                 args.is_renew_logs = true;
             } else {
-                // TODO: パスセパレータをOS用に置換
+                let ms = MAIN_SEPARATOR.to_string();
                 if file_count == 0 {
-                    args.load_file_name = arg;
+                    args.load_file_name = arg.replace("/", &ms);
                 } else if file_count == 1 {
-                    args.save_file_name = arg;
+                    args.save_file_name = arg.replace("/", &ms);
                 } else {
                     args.is_help = true;
                 }
