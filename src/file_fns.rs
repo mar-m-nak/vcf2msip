@@ -1,12 +1,15 @@
 use crate::error_flg;
 use crate::vcf_parser;
+use crate::arg_and_help;
 
 pub use std::path::MAIN_SEPARATOR;
 pub use std::{env, path::Path};
 pub use std::fs::{OpenOptions, copy, read_dir, remove_file, rename};
 pub use std::io::prelude::*;
+
 use error_flg::*;
 use vcf_parser::*;
+use arg_and_help::*;
 
 /// touch output file with overwrite or append
 pub fn create_file(filename: &str, is_append: bool) -> Result<File, i32> {
@@ -91,4 +94,9 @@ pub fn get_new_bup_filename(filename: &str) -> String {
     }
     last_number += 1;
     format!("{}.bup{:04}", &filename, last_number)
+}
+
+/// check i/o files exists
+pub fn is_exists_io_files(args: &Args) -> bool {
+    Path::new(args.load_file_name()).is_file() && Path::new(args.save_file_name()).is_file()
 }

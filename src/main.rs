@@ -27,55 +27,38 @@ fn main() {
 /// proccess of convert
 fn conv(args: &Args) -> Result<(), i32> {
 
+    // check i/o file exists
+    if !is_exists_io_files(&args) {
+        return Err(_ERR_FILE_NOT_FOUND);
+    }
+
     // open and read vcf file
     // let filename = "./testfiles/contacts.vcf";
-    let filename = args.load_file_name();
-    let vcf = match Vcf::new(&filename) {
+    let vcf = match Vcf::new(&args.load_file_name()) {
         Ok(vcf) => vcf,
         Err(e) => { return Err(e); },
     };
 
     // create micro-sip xml file
     // let filename = "./testfiles/Contacts.xml";
-    let filename = args.save_file_name();
-    let mut hxmlfile = match create_file(&filename, false) {
+    let tmp_filename = make_tmp_filename(&args.save_file_name());
+    let mut hfile = match create_file(&tmp_filename, false) {
         Ok(h) => h,
         Err(e) => { return Err(e); }
     };
-    if let Err(_) = writeln!(hxmlfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
-        return Err(_ERR_WRITE_FILE);
+    if let Err(e) = output_xml_file(&vcf, &mut hfile) {
+        delete_file(&tmp_filename);
+        return Err(e);
     }
-
-    // loop at vcards
-    let mut count_contact = 0;
-    let mut count_number = 0;
-    for vcard in vcf.get_vcards() {
-        // parse one contact
-        let ct = Contact::new(&vcard);
-        if ct.is_empty() { continue; }
-        let name = format!("{} - {}", ct.name_index(), ct.full_name())
-            .replace("\"", "");
-        // loop at telephone in this contact
-        for tel in ct.tel_iter() {
-            let number = tel.get_number();
-            let tel_type = if tel.get_type().is_empty() {
-                "".to_string()
-            } else {
-                format!(" ({})", tel.get_type())
-            };
-            // write to xml file
-            let xml = Contact::fmt_xml(name.as_ref(), tel_type.as_ref(), number);
-            if let Err(_) = writeln!(hxmlfile, "{}\r", xml) {
-                continue;
-            }
-            count_number += 1;
+    if !args.is_no_bup() {
+        if let Err(e) = file_backup(&args.save_file_name()) {
+            delete_file(&tmp_filename);
+            return Err(e);
         }
-        count_contact += 1;
     }
-    println!("contact: {} / number: {}", count_contact, count_number);
-
-    if let Err(_) = writeln!(hxmlfile, "</contacts>\r") {
-        return Err(_ERR_WRITE_FILE);
+    if let Err(_) = rename(&tmp_filename, &args.save_file_name()) {
+        delete_file(&tmp_filename);
+        return Err(_ERR_FIX_FILE_COPY);
     }
 
     // renew logs name for MicroSIP.ini
@@ -123,5 +106,45 @@ fn conv(args: &Args) -> Result<(), i32> {
         }
     }
 
+    Ok(())
+}
+
+/// write to xml file
+fn output_xml_file(vcf: &Vcf, hfile: &mut File) -> Result<(), i32> {
+    // write header
+    if let Err(_) = writeln!(hfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
+        return Err(_ERR_WRITE_FILE);
+    }
+    // loop at vcards
+    let mut count_contact = 0;
+    let mut count_number = 0;
+    for vcard in vcf.get_vcards() {
+        // parse one contact
+        let ct = Contact::new(&vcard);
+        if ct.is_empty() { continue; }
+        let name = format!("{} - {}", ct.name_index(), ct.full_name())
+            .replace("\"", "");
+        // loop at telephone in this contact
+        for tel in ct.tel_iter() {
+            let number = tel.get_number();
+            let tel_type = if tel.get_type().is_empty() {
+                "".to_string()
+            } else {
+                format!(" ({})", tel.get_type())
+            };
+            // write element
+            let xml = Contact::fmt_xml(name.as_ref(), tel_type.as_ref(), number);
+            if let Err(_) = writeln!(hfile, "{}\r", xml) {
+                continue;
+            }
+            count_number += 1;
+        }
+        count_contact += 1;
+    }
+    // write footer
+    if let Err(_) = writeln!(hfile, "</contacts>\r") {
+        return Err(_ERR_WRITE_FILE);
+    }
+    println!("contact: {} / number: {}", count_contact, count_number);
     Ok(())
 }
