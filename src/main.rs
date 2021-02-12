@@ -108,6 +108,7 @@ fn conv(args: &Args) -> Result<(), i32> {
 
 /// write to xml file
 fn output_xml_file(vcf: &Vcf, hfile: &mut File, sip_contacts: &mut SipContacts) -> Result<(), i32> {
+    let mut prog_len: usize = 0;
     // write header
     if let Err(_) = writeln!(hfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
         return Err(_ERR_WRITE_FILE);
@@ -116,7 +117,11 @@ fn output_xml_file(vcf: &Vcf, hfile: &mut File, sip_contacts: &mut SipContacts) 
     let mut count_contact: usize = 0;
     let mut count_number: usize = 0;
     let mut count_merge: usize = 0;
-    for vcard in vcf.get_vcards() {
+    let vcf_vcards = vcf.get_vcards();
+    let all_len = vcf_vcards.len();
+    for vcard in vcf_vcards {
+        prog_len += 1;
+        console_progress_bar("Convert", all_len, prog_len);
         // parse one contact
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
@@ -145,8 +150,12 @@ fn output_xml_file(vcf: &Vcf, hfile: &mut File, sip_contacts: &mut SipContacts) 
     }
     // merge remaining original contact
     if !sip_contacts.is_empty() {
+        let all_len = sip_contacts.data().len();
+        prog_len = 0;
         let tel_type = "";
         for (sct_fix_number, number, name) in sip_contacts.data() {
+            prog_len += 1;
+            console_progress_bar("Merge", all_len, prog_len);
             if sct_fix_number.is_empty() { continue; }
             // write element
             let xml = Contact::fmt_xml(&name, tel_type, &number);
@@ -160,6 +169,7 @@ fn output_xml_file(vcf: &Vcf, hfile: &mut File, sip_contacts: &mut SipContacts) 
     if let Err(_) = writeln!(hfile, "</contacts>\r") {
         return Err(_ERR_WRITE_FILE);
     }
+    // TODO: エスケープシーケンスによるプログレスバー?
     println!("contact: {} / number: {} / merge: {}", count_contact, count_number, count_merge);
     Ok(())
 }
