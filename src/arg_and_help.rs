@@ -1,4 +1,5 @@
-use std::{env, path::Path};
+pub use std::path::MAIN_SEPARATOR;
+pub use std::{env, path::Path};
 
 pub const ARG_HELP: &'static [&'static str] = &["-h", "-v", "--help", "--version"];
 pub const ARG_MERGE: &'static [&'static str] = &["-m", "--merge"];
@@ -21,6 +22,7 @@ pub struct Args {
 
 impl Args {
 
+    /// set structue from console args
     pub fn get_params() -> Self {
         let mut args = Args::default();
         let mut file_count = 0;
@@ -63,23 +65,24 @@ impl Args {
                 // make MicroSIP.ini path to same as xml path
                 if let Some(s) = Path::new(&args.save_file_name).parent() {
                     let path = s.to_str().map_or("", |s| s);
-                    args.microsip_ini_file = format!("{}/MicroSIP.ini", path);
+                    args.microsip_ini_file = format!("{}{}MicroSIP.ini", path, MAIN_SEPARATOR);
                 }
             }
         }
-        println!("{:?}", args);
+        #[cfg(debug_assertions)] { println!("{:?}", args); }
         args
     }
 
+    // getters
     pub fn load_file_name(&self) -> &str { self.load_file_name.as_ref() }
     pub fn save_file_name(&self) -> &str { self.save_file_name.as_ref() }
     pub fn microsip_ini_file(&self) -> &str { self.microsip_ini_file.as_ref() }
-
     pub fn is_help(&self) -> bool { self.is_help }
     pub fn is_merge(&self) -> bool { self.is_merge }
     pub fn is_no_bup(&self) -> bool { self.is_no_bup }
     pub fn is_renew_logs(&self) -> bool { self.is_renew_logs }
 
+    /// print help to console
     pub fn print_help(&self) {
         println!("\n\n{} - Version {}\n----", _PKG_NAME, _PKG_VERSION);
         println!("usage: {} [OPTIONS] \
