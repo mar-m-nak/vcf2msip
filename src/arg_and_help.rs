@@ -11,6 +11,7 @@ pub const ARG_PAT_INITIAL: &'static str = "%initial%";
 pub const ARG_PAT_TEL_TYPE: &'static str = "%tel_type%";
 pub const ARG_PAT_CATEGORIES: &'static str = "%categories%";
 pub const ARG_PAT_DEFAULT: &'static str = "%initial% - %name% (%tel_type%)";
+pub const ARG_PAT_LOGS_DEFAULT: &'static str = "%name% (%tel_type%)";
 
 const _PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const _PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -20,7 +21,8 @@ pub struct Args {
     load_file_name: String,
     save_file_name: String,
     microsip_ini_file: String,
-    name_pattern: String,
+    pattern1: String,
+    pattern2: String,
     is_help: bool,
     is_merge: bool,
     is_no_bup: bool,
@@ -33,6 +35,8 @@ impl Args {
     pub fn get_params() -> Self {
         let mut args = Args::default();
         let mut file_count = 0;
+        args.pattern1 = ARG_PAT_DEFAULT.to_string();
+        args.pattern2 = ARG_PAT_LOGS_DEFAULT.to_string();
         for (i, arg) in env::args().enumerate() {
             if i == 0 { continue; }
             if ARG_HELP.contains(&arg.as_ref()) {
@@ -50,7 +54,9 @@ impl Args {
                 } else if file_count == 1 {
                     args.save_file_name = arg.replace("/", &ms);
                 } else if file_count == 2 {
-                    args.name_pattern = arg;
+                    args.pattern1 = arg;
+                } else if file_count == 3 {
+                    args.pattern2 = arg;
                 } else {
                     args.is_help = true;
                 }
@@ -58,11 +64,11 @@ impl Args {
             }
         }
         // default name patttern
-        if file_count == 2 {
-            args.name_pattern = ARG_PAT_DEFAULT.to_string();
+        if file_count == 3 {
+            args.pattern2 = ARG_PAT_LOGS_DEFAULT.to_string();
         }
         // file arg miss match are help
-        if file_count < 2 || file_count > 3 {
+        if file_count < 2 || file_count > 4 {
             args.is_help = true;
         }
         if let Some(s) = Path::new(&args.load_file_name).extension() {
@@ -91,6 +97,8 @@ impl Args {
     pub fn load_file_name(&self) -> &str { self.load_file_name.as_ref() }
     pub fn save_file_name(&self) -> &str { self.save_file_name.as_ref() }
     pub fn microsip_ini_file(&self) -> &str { self.microsip_ini_file.as_ref() }
+    pub fn pattern1(&self) -> &str { self.pattern1.as_ref() }
+    pub fn pattern2(&self) -> &str { self.pattern2.as_ref() }
     pub fn is_help(&self) -> bool { self.is_help }
     pub fn is_merge(&self) -> bool { self.is_merge }
     pub fn is_no_bup(&self) -> bool { self.is_no_bup }
@@ -102,37 +110,27 @@ impl Args {
         println!("\nusage: {} [OPTIONS] \
             \"path\\to\\load\\*.vcf\" \
             \"path\\to\\save\\Contacts.xml\" \
-            [\"%NAME_PATTERN%\"]",
+            [\"%PATTERN1%\"] \
+            [\"%PATTERN2%\"]",
             _PKG_NAME
         );
         println!("\n---- OPTIONS ----");
-        println!("{:?}\t... Merge from exist MicroSip contacts too. Default:no merge.", ARG_MERGE);
+        println!("{:?}\t... Merge from exist MicroSIP contacts too. Default:no merge.", ARG_MERGE);
         println!("{:?}\t... Not create backup. Default:create.", ARG_OVERWRITE);
         println!("{:?}\t... Renew name in logs tab. Default:no touch.", ARG_RENEWLOGS);
         println!("{:?} ... This message.", ARG_HELP);
-        println!("\n---- NAME_PATTERN ----");
+        println!("\n---- PATTERN1&2 ----");
         println!("- Pattern of convert to name from vcf contact.");
+        println!("- Pattern1 is name column in MicroSIP contacts tab.");
+        println!("- Pattern2 is name column in MicroSIP logs tab.");
+        println!("- In the case of omit Pattern2, Applies Pattern1.");
         println!("- Emptied () and [] are remove at all last.");
-        println!("- Default: \"{}\"", ARG_PAT_DEFAULT);
+        println!("- Default 1: \"{}\"", ARG_PAT_DEFAULT);
+        println!("- Default 2: \"{}\"", ARG_PAT_LOGS_DEFAULT);
         println!("{:?}\t... Full name or Organization name.", ARG_PAT_NAME);
         println!("{:?}\t... Initial of %name%", ARG_PAT_INITIAL);
         println!("{:?}\t... Telephone type.", ARG_PAT_TEL_TYPE);
         println!("{:?}\t... Categories string.", ARG_PAT_CATEGORIES);
         println!("\n");
-    }
-
-    /// return formated name from pattern
-    pub fn fmt_name(
-        &self, name: &str, initial: &str, tel_type: &str, categories: &str
-    ) -> String {
-        self.name_pattern
-            .replace(ARG_PAT_NAME, name)
-            .replace(ARG_PAT_TEL_TYPE, tel_type)
-            .replace(ARG_PAT_CATEGORIES, categories)
-            .replace(ARG_PAT_INITIAL, initial)
-            .replace("\"", "''")
-            .replace("()", "")
-            .replace("[]", "")
-            .trim().to_string()
     }
 }

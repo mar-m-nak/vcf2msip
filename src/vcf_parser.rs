@@ -1,10 +1,12 @@
 use crate::error_flg;
+use crate::arg_and_help;
 
 pub use std::fs::File;
 pub use std::io::{BufReader, Read};
 use kanaria::{string::UCSStr, utils::ConvertTarget};
 pub use regex::Regex;
 use error_flg::*;
+use arg_and_help::{ARG_PAT_NAME, ARG_PAT_INITIAL, ARG_PAT_CATEGORIES, ARG_PAT_TEL_TYPE};
 
 #[derive(Debug)]
 pub struct Telephone {
@@ -102,7 +104,7 @@ impl Contact {
     }
 
     /// return full or organization name
-    pub fn full_name(&self) -> &str {
+    fn full_name(&self) -> &str {
         if !self.full_name.is_empty() {
             self.full_name.as_ref()
         } else {
@@ -127,11 +129,6 @@ impl Contact {
         }
     }
 
-    // return categories string
-    pub fn categories(&self) -> &str {
-        self.categories.as_ref()
-    }
-
     /// return telephones iterator
     pub fn tel_iter(&self) -> impl Iterator<Item = &Telephone> {
         self.tel_numbers.iter()
@@ -142,6 +139,18 @@ impl Contact {
         let line = r#"<contact name="%name%" number="%number%" firstname="" lastname="" phone="" mobile="" email="" address="" city="" state="" zip="" comment="" id="" info="" presence="0" directory="0"/>"#;
         line.replace("%name%", name)
             .replace("%number%", number)
+    }
+
+    /// return formated name from pattern
+    pub fn fmt_name(&self, pattern: &str, initial: &str, tel_type: &str) -> String {
+        pattern
+            .replace(ARG_PAT_NAME, &self.full_name())
+            .replace(ARG_PAT_TEL_TYPE, tel_type)
+            .replace(ARG_PAT_CATEGORIES, &self.categories)
+            .replace(ARG_PAT_INITIAL, initial)
+            .replace("()", "")
+            .replace("[]", "")
+            .trim().to_string()
     }
 }
 

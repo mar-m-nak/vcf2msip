@@ -127,9 +127,7 @@ fn output_xml_file(
         // parse one contact
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
-        let name = ct.full_name();
         let initial = ct.name_index();
-        let categories = ct.categories();
         // loop at telephone in this contact
         for tel in ct.tel_iter() {
             let number = tel.get_number();
@@ -139,7 +137,8 @@ fn output_xml_file(
                 sip_contacts.clear_exist(&number);
             };
             // write element
-            let fmt_name = args.fmt_name(name, &initial, tel_type, categories);
+            let fmt_name = ct.fmt_name(&args.pattern1(), &initial, tel_type)
+                .replace("\"", "&quot;");
             if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&fmt_name, &number)) {
                 continue;
             }
@@ -178,17 +177,15 @@ fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) {
         // parse one contact
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
-        let name = ct.full_name();
         let initial = ct.name_index();
-        let categories = ct.categories();
         // loop at telephone in this contact
         for tel in ct.tel_iter() {
             let old_line = ini_io.get_match_number_line(tel.get_number());
             // replace MicroSIP.ini on buffer
             if !old_line.is_empty() {
                 let tel_type = tel.get_type();
-                let new_name = args.fmt_name(name, &initial, tel_type, categories)
-                    .replace(";", ":");
+                let new_name = ct.fmt_name(&args.pattern2(), &initial, tel_type)
+                    .replace(";", "|");
                 let new_line = IniIo::make_new_number_line(&old_line, &new_name);
                 if !new_line.is_empty() {
                     ini_io.replace(&old_line, &new_line);
