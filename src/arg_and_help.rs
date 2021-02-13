@@ -21,8 +21,8 @@ pub struct Args {
     load_file_name: String,
     save_file_name: String,
     microsip_ini_file: String,
-    pattern1: String,
-    pattern2: String,
+    name_pattern_normal: String,
+    name_pattern_logs: String,
     is_help: bool,
     is_merge: bool,
     is_no_bup: bool,
@@ -35,8 +35,8 @@ impl Args {
     pub fn get_params() -> Self {
         let mut args = Args::default();
         let mut file_count = 0;
-        args.pattern1 = ARG_PAT_DEFAULT.to_string();
-        args.pattern2 = ARG_PAT_LOGS_DEFAULT.to_string();
+        args.name_pattern_normal = ARG_PAT_DEFAULT.to_string();
+        args.name_pattern_logs = ARG_PAT_LOGS_DEFAULT.to_string();
         for (i, arg) in env::args().enumerate() {
             if i == 0 { continue; }
             if ARG_HELP.contains(&arg.as_ref()) {
@@ -54,9 +54,9 @@ impl Args {
                 } else if file_count == 1 {
                     args.save_file_name = arg.replace("/", &ms);
                 } else if file_count == 2 {
-                    args.pattern1 = arg;
+                    args.name_pattern_normal = arg;
                 } else if file_count == 3 {
-                    args.pattern2 = arg;
+                    args.name_pattern_logs = arg;
                 } else {
                     args.is_help = true;
                 }
@@ -65,7 +65,7 @@ impl Args {
         }
         // default name patttern
         if file_count == 3 {
-            args.pattern2 = ARG_PAT_LOGS_DEFAULT.to_string();
+            args.name_pattern_logs = ARG_PAT_LOGS_DEFAULT.to_string();
         }
         // file arg miss match are help
         if file_count < 2 || file_count > 4 {
@@ -97,8 +97,8 @@ impl Args {
     pub fn load_file_name(&self) -> &str { self.load_file_name.as_ref() }
     pub fn save_file_name(&self) -> &str { self.save_file_name.as_ref() }
     pub fn microsip_ini_file(&self) -> &str { self.microsip_ini_file.as_ref() }
-    pub fn pattern1(&self) -> &str { self.pattern1.as_ref() }
-    pub fn pattern2(&self) -> &str { self.pattern2.as_ref() }
+    pub fn name_pattern_normal(&self) -> &str { self.name_pattern_normal.as_ref() }
+    pub fn name_pattern_logs(&self) -> &str { self.name_pattern_logs.as_ref() }
     pub fn is_help(&self) -> bool { self.is_help }
     pub fn is_merge(&self) -> bool { self.is_merge }
     pub fn is_no_bup(&self) -> bool { self.is_no_bup }
@@ -121,9 +121,9 @@ impl Args {
         println!("{:?} ... This message.", ARG_HELP);
         println!("\n---- PATTERN1&2 ----");
         println!("- Pattern of convert to name from vcf contact.");
-        println!("- Pattern1 is name column in MicroSIP contacts tab.");
-        println!("- Pattern2 is name column in MicroSIP logs tab.");
-        println!("- In the case of omit Pattern2, Applies Pattern1.");
+        println!("- PATTERN1 apply to Name column in MicroSIP contacts tab.");
+        println!("- PATTERN2 apply to Name column in MicroSIP logs tab.");
+        println!("- If omit PATTERN2 then applies PATTERN1 to PATTERN2.");
         println!("- Emptied () and [] are remove at all last.");
         println!("- Default 1: \"{}\"", ARG_PAT_DEFAULT);
         println!("- Default 2: \"{}\"", ARG_PAT_LOGS_DEFAULT);

@@ -142,8 +142,8 @@ impl Contact {
     }
 
     /// return formated name from pattern
-    pub fn fmt_name(&self, pattern: &str, initial: &str, tel_type: &str) -> String {
-        pattern
+    pub fn fmt_name(&self, name_pattern: &str, initial: &str, tel_type: &str) -> String {
+        name_pattern
             .replace(ARG_PAT_NAME, &self.full_name())
             .replace(ARG_PAT_TEL_TYPE, tel_type)
             .replace(ARG_PAT_CATEGORIES, &self.categories)

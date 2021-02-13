@@ -137,7 +137,7 @@ fn output_xml_file(
                 sip_contacts.clear_exist(&number);
             };
             // write element
-            let fmt_name = ct.fmt_name(&args.pattern1(), &initial, tel_type)
+            let fmt_name = ct.fmt_name(&args.name_pattern_normal(), &initial, tel_type)
                 .replace("\"", "&quot;");
             if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&fmt_name, &number)) {
                 continue;
@@ -184,7 +184,7 @@ fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) {
             // replace MicroSIP.ini on buffer
             if !old_line.is_empty() {
                 let tel_type = tel.get_type();
-                let new_name = ct.fmt_name(&args.pattern2(), &initial, tel_type)
+                let new_name = ct.fmt_name(&args.name_pattern_logs(), &initial, tel_type)
                     .replace(";", "|");
                 let new_line = IniIo::make_new_number_line(&old_line, &new_name);
                 if !new_line.is_empty() {
