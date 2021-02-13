@@ -9,8 +9,8 @@ pub const ARG_RENEWLOGS: &'static [&'static str] = &["-r", "--renew-logs"];
 pub const ARG_PAT_NAME: &'static str = "%name%";
 pub const ARG_PAT_INITIAL: &'static str = "%initial%";
 pub const ARG_PAT_TEL_TYPE: &'static str = "%tel_type%";
-pub const ARG_PAT_CATEGORY: &'static str = "%category%";
-pub const ARG_PAT_DEFAULT: &'static str = "%initial% - %name% (%tel_type%)%";
+pub const ARG_PAT_CATEGORIES: &'static str = "%categories%";
+pub const ARG_PAT_DEFAULT: &'static str = "%initial% - %name% (%tel_type%)";
 
 const _PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const _PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -112,11 +112,27 @@ impl Args {
         println!("{:?} ... This message.", ARG_HELP);
         println!("\n---- NAME_PATTERN ----");
         println!("- Pattern of convert to name from vcf contact.");
+        println!("- Emptied () and [] are remove at all last.");
         println!("- Default: \"{}\"", ARG_PAT_DEFAULT);
         println!("{:?}\t... Full name or Organization name.", ARG_PAT_NAME);
         println!("{:?}\t... Initial of %name%", ARG_PAT_INITIAL);
         println!("{:?}\t... Telephone type.", ARG_PAT_TEL_TYPE);
-        println!("{:?}\t... Categories string.", ARG_PAT_CATEGORY);
+        println!("{:?}\t... Categories string.", ARG_PAT_CATEGORIES);
         println!("\n");
+    }
+
+    /// return formated name from pattern
+    pub fn fmt_name(
+        &self, name: &str, initial: &str, tel_type: &str, categories: &str
+    ) -> String {
+        self.name_pattern
+            .replace(ARG_PAT_NAME, name)
+            .replace(ARG_PAT_TEL_TYPE, tel_type)
+            .replace(ARG_PAT_CATEGORIES, categories)
+            .replace(ARG_PAT_INITIAL, initial)
+            .replace("\"", "''")
+            .replace("()", "")
+            .replace("[]", "")
+            .trim().to_string()
     }
 }
