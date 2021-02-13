@@ -127,6 +127,7 @@ impl Contact {
         }
     }
 
+    // return categories string
     pub fn categories(&self) -> &str {
         self.categories.as_ref()
     }

@@ -140,6 +140,7 @@ fn output_xml_file(vcf: &Vcf, hfile: &mut File, sip_contacts: &mut SipContacts) 
                 sip_contacts.clear_exist(&number);
             };
             // write element
+            // TODO: カテゴリ取得、パターンからnew_name作成、tel_typeは渡さなくて良くなる
             let xml = Contact::fmt_xml(&name, tel_type.as_ref(), &number);
             if let Err(_) = writeln!(hfile, "{}\r", xml) {
                 continue;
