@@ -37,26 +37,3 @@ pub fn fix_number(number: &str) -> String {
     };
     fix_number
 }
-
-/// progress bar
-pub fn console_progress_bar(title: &str, all_len: usize, prog_len: usize) {
-    const _MAX: usize = 80;
-    let width = _MAX - title.len() - 7 - 12;
-    let is_done = all_len <= prog_len;
-    let per = if !is_done {
-        (prog_len as f32 / all_len as f32 * width as f32).ceil() as usize
-    } else {
-        width
-    };
-    print!("\r \r> {} : [", &title);
-    for i in 1..width {
-        let c = if i < per {"#"} else {" "};
-        print!("{}", c);
-    }
-    if !is_done {
-        print!("] {} / {}", prog_len, all_len);
-    } else {
-        let w = prog_len.to_string().len() + all_len.to_string().len() + 4;
-        print!("] Done!{:1$}\n", " ", w - 6);
-    }
-}
