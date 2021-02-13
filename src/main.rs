@@ -15,6 +15,40 @@ use file_fns::*;
 use xml_perser::*;
 use progress_bar::*;
 
+#[derive(Default)]
+struct ProcCounter {
+    all_contact: usize,
+    all_telephone: usize,
+    contact: usize,
+    telphone: usize,
+    merge: usize,
+    logs: usize,
+}
+
+impl ProcCounter {
+    pub fn add_count(&mut self, pc: &ProcCounter) {
+        self.all_contact += pc.all_contact;
+        self.all_telephone += pc.all_telephone;
+        self.contact += pc.contact;
+        self.telphone += pc.telphone;
+        self.merge += pc.merge;
+        self.logs += pc.logs;
+    }
+    pub fn print(&self) {
+        println!(
+            "ALL VCF CONTACTS: {} / ALL VCF TELEPHONES: {}",
+            self.all_contact, self.all_telephone
+        );
+        println!(
+            "PROCESSED [Contact:{}, Telephone:{}, Merge:{}, RenewLogs:{}]",
+            self.contact,
+            self.telphone,
+            self.merge,
+            self.logs
+        );
+    }
+}
+
 fn main() {
     // cargo run -- -r .\testfiles\contacts.vcf .\testfiles\Contacts.xml
 
@@ -60,10 +94,17 @@ fn conv(args: &Args) -> Result<(), i32> {
         Ok(h) => h,
         Err(e) => { return Err(e); }
     };
-    if let Err(e) = output_xml_file(&vcf, &args,&mut hfile, &mut sip_contacts) {
-        delete_file(&tmp_filename);
-        return Err(e);
-    }
+    let mut pc = ProcCounter::default();
+    match output_xml_file(&vcf, &args,&mut hfile, &mut sip_contacts) {
+        Ok(res_pc) => {
+            pc.add_count(&res_pc);
+        },
+        Err(e) => {
+            delete_file(&tmp_filename);
+            return Err(e);
+        },
+    };
+
     // backup original micro-sip xml, if necessary
     if !args.is_no_bup() {
         if let Err(e) = file_backup(&args.save_file_name()) {
@@ -84,7 +125,8 @@ fn conv(args: &Args) -> Result<(), i32> {
             Ok(iniio) => iniio,
             Err(_) => { return Err(_ERR_DID_NOT_RUN_RENEW_LOGS) },
         };
-        renew_ini_buffer(&vcf, &args, &mut ini_io);
+        // renew buffer
+        pc.add_count(&renew_ini_buffer(&vcf, &args, &mut ini_io));
         // write renewed MicroSIP.ini to tempolary file
         let tmp_filename = make_tmp_filename(&args.microsip_ini_file());
         if let Err(e) = ini_io.save(&tmp_filename) {
@@ -104,24 +146,23 @@ fn conv(args: &Args) -> Result<(), i32> {
             Err(_) => { return Err(_ERR_FIX_FILE_COPY); },
         }
     }
-
+    pc.print();
     Ok(())
 }
 
 /// write to xml file
 fn output_xml_file(
     vcf: &Vcf, args: &Args, hfile: &mut File, sip_contacts: &mut SipContacts
-) -> Result<(), i32> {
+) -> Result<ProcCounter, i32> {
     // write header
     if let Err(_) = writeln!(hfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
         return Err(_ERR_WRITE_FILE);
     }
     // loop at vcards
-    let mut count_contact: usize = 0;
-    let mut count_number: usize = 0;
-    let mut count_merge: usize = 0;
+    let mut pc = ProcCounter::default();
     let vcf_vcards = vcf.get_vcards();
-    let mut pgbar = ProgressBar::new("Convert", vcf_vcards.len());
+    pc.all_contact = vcf_vcards.len();
+    let mut pgbar = ProgressBar::new("Convert", pc.all_contact);
     for vcard in vcf_vcards {
         pgbar.progress();
         // parse one contact
@@ -130,6 +171,7 @@ fn output_xml_file(
         let initial = ct.name_index();
         // loop at telephone in this contact
         for tel in ct.tel_iter() {
+            pc.all_telephone += 1;
             let number = tel.get_number();
             let tel_type = tel.get_type();
             // clear original contact if exist
@@ -142,9 +184,9 @@ fn output_xml_file(
             if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&fmt_name, &number)) {
                 continue;
             }
-            count_number += 1;
+            pc.telphone += 1;
         }
-        count_contact += 1;
+        pc.contact += 1;
     }
     // merge remaining original contact
     if !sip_contacts.is_empty() {
@@ -156,20 +198,20 @@ fn output_xml_file(
             if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&name, &number)) {
                 continue;
             }
-            count_merge += 1;
+            pc.merge += 1;
         }
     }
     // write footer
     if let Err(_) = writeln!(hfile, "</contacts>\r") {
         return Err(_ERR_WRITE_FILE);
     }
-    println!("contact: {} / number: {} / merge: {}", count_contact, count_number, count_merge);
-    Ok(())
+    Ok(pc)
 }
 
 /// replace MicroSIP.ini on buffer in IniIo
-fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) {
+fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) -> ProcCounter {
     // loop at vcards
+    let mut pc = ProcCounter::default();
     let vcf_vcards = vcf.get_vcards();
     let mut pgbar = ProgressBar::new("ReNew Logs", vcf_vcards.len());
     for vcard in vcf_vcards {
@@ -189,8 +231,10 @@ fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) {
                 let new_line = IniIo::make_new_number_line(&old_line, &new_name);
                 if !new_line.is_empty() {
                     ini_io.replace(&old_line, &new_line);
+                    pc.logs += 1;
                 }
             }
         }
     }
+    pc
 }
