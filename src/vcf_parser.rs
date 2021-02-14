@@ -32,7 +32,7 @@ pub struct Vcf {
 
 impl Vcf {
 
-    /// load vcf file to buffer
+    /// Read vcf file
     pub fn new(filename: &str) -> Result<Self, i32> {
         let hfile = match File::open(&filename) {
             Ok(h) => h,
@@ -46,7 +46,7 @@ impl Vcf {
         Ok(vcf)
     }
 
-    /// return split vcards
+    /// Return split vcards
     pub fn get_vcards(&self) -> Vec<&str> {
         let mut block: Vec<&str> = self.data.split("END:VCARD").collect();
         block.pop();
@@ -56,7 +56,7 @@ impl Vcf {
 
 impl Contact {
 
-    /// parse one vcard
+    /// Parse one vcard
     pub fn new(vcard: &str) -> Self {
         Self {
             full_name: Self::capture("FN:", &vcard),
@@ -69,19 +69,19 @@ impl Contact {
         }
     }
 
-    /// capture value from header line
-    fn capture(header: &str, vcard: &str) -> String {
-        let pat = format!("(?m)^{}(.*)$", &header);
+    /// Capture value from prefixed line
+    fn capture(prefix: &str, vcard: &str) -> String {
+        let pat = format!("(?m)^{}(.*)$", &prefix);
         let re = Regex::new(&pat).unwrap();
         let raw_value = match re.captures(&vcard) {
             None => "".to_string(),
             Some(s) => s[1].trim_end().to_string(),
         };
-        // convert japanese HANKAKU KATAKANA to ZENKAKU
+        // Convert japanese HANKAKU KATAKANA to ZENKAKU
         UCSStr::from_str(&raw_value).wide(ConvertTarget::KATAKANA).to_string()
     }
 
-    /// capture telephones type and number
+    /// Capture telephones type and number
     fn cap_tel_numbers(vcard: &str) -> Vec<Telephone> {
         let re = Regex::new(r"(?m)^[item\d\.]*TEL(;TYPE=([a-zA-Z]*))*:(.*)$").unwrap();
         let mut vec_telnums:Vec<Telephone> = Vec::new();
@@ -98,12 +98,12 @@ impl Contact {
         vec_telnums
     }
 
-    /// is no telephone number
+    /// Check telephone number is empty
     pub fn is_empty(&self) -> bool {
         self.tel_numbers.is_empty()
     }
 
-    /// return full or organization name
+    /// Return full name, or organization name
     fn full_name(&self) -> &str {
         if !self.full_name.is_empty() {
             self.full_name.as_ref()
@@ -112,7 +112,7 @@ impl Contact {
         }
     }
 
-    /// return initial from last or full or org name
+    /// Return initial from last or full or org name
     pub fn name_index(&self) -> String {
         let target_name = if !self.xlast_name.is_empty() {
             &self.xlast_name
@@ -129,19 +129,19 @@ impl Contact {
         }
     }
 
-    /// return telephones iterator
+    /// Return telephones iterator
     pub fn tel_iter(&self) -> impl Iterator<Item = &Telephone> {
         self.tel_numbers.iter()
     }
 
-    /// return one xml line
+    /// Return one xml element line
     pub fn xml_line(name: &str, number: &str) -> String {
         let line = r#"<contact name="%name%" number="%number%" firstname="" lastname="" phone="" mobile="" email="" address="" city="" state="" zip="" comment="" id="" info="" presence="0" directory="0"/>"#;
         line.replace("%name%", name)
             .replace("%number%", number)
     }
 
-    /// return formated name from pattern
+    /// Return formated name from pattern
     pub fn fmt_name(&self, name_pattern: &str, initial: &str, tel_type: &str) -> String {
         name_pattern
             .replace(ARG_PAT_NAME, &self.full_name())

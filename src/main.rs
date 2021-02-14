@@ -50,6 +50,7 @@ impl ProcCounter {
 }
 
 fn main() {
+    // TODO: test
     // cargo run -- -r .\testfiles\contacts.vcf .\testfiles\Contacts.xml
 
     let args = Args::get_params();
@@ -64,15 +65,14 @@ fn main() {
     };
 }
 
-/// proccess of convert
+/// Proccess of convert
 fn conv(args: &Args) -> Result<(), i32> {
 
-    // check i/o file exists
     if !is_exists_io_files(&args) {
         return Err(_ERR_FILE_NOT_FOUND);
     }
 
-    // get MicroSIP Contacts
+    // Read MicroSIP Contacts.xml file
     let mut sip_contacts = if args.is_merge() {
         match SipContacts::new(&args.save_file_name()) {
             Ok(sc) => sc,
@@ -82,13 +82,13 @@ fn conv(args: &Args) -> Result<(), i32> {
         SipContacts::empty()
     };
 
-    // open and read vcf file
+    // Read vcf file
     let vcf = match Vcf::new(&args.load_file_name()) {
         Ok(vcf) => vcf,
         Err(e) => { return Err(e); },
     };
 
-    // output new micro-sip xml to temporaly file
+    // Output new xml to temporaly file
     let tmp_filename = make_tmp_filename(&args.save_file_name());
     let mut hfile = match create_file(&tmp_filename, false) {
         Ok(h) => h,
@@ -104,43 +104,41 @@ fn conv(args: &Args) -> Result<(), i32> {
             return Err(e);
         },
     };
-
-    // backup original micro-sip xml, if necessary
+    // Backup original xml file
     if !args.is_no_bup() {
         if let Err(e) = file_backup(&args.save_file_name()) {
             delete_file(&tmp_filename);
             return Err(e);
         }
     }
-    // apply tempolary file to true micro-sip xml file
+    // Apply tempolary file to true Contact.xml file
     if let Err(_) = rename(&tmp_filename, &args.save_file_name()) {
         delete_file(&tmp_filename);
         return Err(_ERR_FIX_FILE_COPY);
     }
 
-    // renew logs name for MicroSIP.ini
+    // Renew logs name in MicroSIP.ini
     if args.is_renew_logs() {
-        // read ini file to buffer in IniIo
+        // Read ini file to buffer
         let mut ini_io = match IniIo::new(&args.microsip_ini_file()) {
             Ok(iniio) => iniio,
             Err(_) => { return Err(_ERR_DID_NOT_RUN_RENEW_LOGS) },
         };
-        // renew buffer
+        // Output renewed buffer to tempolary file
         pc.add_count(&renew_ini_buffer(&vcf, &args, &mut ini_io));
-        // write renewed MicroSIP.ini to tempolary file
         let tmp_filename = make_tmp_filename(&args.microsip_ini_file());
         if let Err(e) = ini_io.save(&tmp_filename) {
             delete_file(&tmp_filename);
             return Err(e);
         }
-        // backup MicroSIP.ini, if necessary
+        // Backup original ini file
         if !args.is_no_bup() {
             if let Err(e) = file_backup(&args.microsip_ini_file()) {
                 delete_file(&tmp_filename);
                 return Err(e);
             }
         }
-        // apply tempolary file to true MicroSIP.ini file
+        // Apply tempolary file to true MicroSIP.ini file
         match rename(&tmp_filename, &args.microsip_ini_file()) {
             Ok(()) => (),
             Err(_) => { return Err(_ERR_FIX_FILE_COPY); },
@@ -150,35 +148,34 @@ fn conv(args: &Args) -> Result<(), i32> {
     Ok(())
 }
 
-/// write to xml file
+/// Write to xml file
 fn output_xml_file(
     vcf: &Vcf, args: &Args, hfile: &mut File, sip_contacts: &mut SipContacts
 ) -> Result<ProcCounter, i32> {
-    // write header
+    // Write start tag
     if let Err(_) = writeln!(hfile, "<?xml version=\"1.0\"?>\r\n<contacts>\r") {
         return Err(_ERR_WRITE_FILE);
     }
-    // loop at vcards
+    // Loop at vcards
     let mut pc = ProcCounter::default();
     let vcf_vcards = vcf.get_vcards();
     pc.all_contact = vcf_vcards.len();
     let mut pgbar = ProgressBar::new("Convert", pc.all_contact);
     for vcard in vcf_vcards {
         pgbar.progress();
-        // parse one contact
+        // Parse one contact, Loop at telephone
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
         let initial = ct.name_index();
-        // loop at telephone in this contact
         for tel in ct.tel_iter() {
             pc.all_telephone += 1;
             let number = tel.get_number();
             let tel_type = tel.get_type();
-            // clear original contact if exist
+            // Clear original contact for merge
             if !sip_contacts.is_empty() {
                 sip_contacts.clear_exist(&number);
             };
-            // write element
+            // Write one element
             let fmt_name = ct.fmt_name(&args.name_pattern_normal(), &initial, tel_type)
                 .replace("\"", "&quot;");
             if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&fmt_name, &number)) {
@@ -188,42 +185,40 @@ fn output_xml_file(
         }
         pc.contact += 1;
     }
-    // merge remaining original contact
+    // Merge remaining original contact
     if !sip_contacts.is_empty() {
         let mut pgbar = ProgressBar::new("Merge", sip_contacts.data().len());
         for (sct_fix_number, number, name) in sip_contacts.data() {
             pgbar.progress();
             if sct_fix_number.is_empty() { continue; }
-            // write element
+            // Write one element
             if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&name, &number)) {
                 continue;
             }
             pc.merge += 1;
         }
     }
-    // write footer
+    // Write end tag
     if let Err(_) = writeln!(hfile, "</contacts>\r") {
         return Err(_ERR_WRITE_FILE);
     }
     Ok(pc)
 }
 
-/// replace MicroSIP.ini on buffer in IniIo
+/// Replace MicroSIP.ini on buffer
 fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) -> ProcCounter {
-    // loop at vcards
     let mut pc = ProcCounter::default();
     let vcf_vcards = vcf.get_vcards();
     let mut pgbar = ProgressBar::new("ReNew Logs", vcf_vcards.len());
     for vcard in vcf_vcards {
+        // Parse one contact, Loop at telephone
         pgbar.progress();
-        // parse one contact
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
         let initial = ct.name_index();
-        // loop at telephone in this contact
         for tel in ct.tel_iter() {
+            // Replace buffer
             let old_line = ini_io.get_match_number_line(tel.get_number());
-            // replace MicroSIP.ini on buffer
             if !old_line.is_empty() {
                 let tel_type = tel.get_type();
                 let new_name = ct.fmt_name(&args.name_pattern_logs(), &initial, tel_type)

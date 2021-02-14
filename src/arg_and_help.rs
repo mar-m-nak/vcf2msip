@@ -31,7 +31,7 @@ pub struct Args {
 
 impl Args {
 
-    /// set structue from console args
+    /// Set structue from console args
     pub fn get_params() -> Self {
         let mut args = Args::default();
         let mut file_count = 0;
@@ -63,11 +63,11 @@ impl Args {
                 file_count += 1;
             }
         }
-        // default name patttern
+        // Set default name patttern
         if file_count == 3 {
             args.name_pattern_logs = ARG_PAT_LOGS_DEFAULT.to_string();
         }
-        // file arg miss match are help
+        // File arg miss match are help
         if file_count < 2 || file_count > 4 {
             args.is_help = true;
         }
@@ -93,7 +93,6 @@ impl Args {
         args
     }
 
-    // getters
     pub fn load_file_name(&self) -> &str { self.load_file_name.as_ref() }
     pub fn save_file_name(&self) -> &str { self.save_file_name.as_ref() }
     pub fn microsip_ini_file(&self) -> &str { self.microsip_ini_file.as_ref() }
@@ -104,7 +103,6 @@ impl Args {
     pub fn is_no_bup(&self) -> bool { self.is_no_bup }
     pub fn is_renew_logs(&self) -> bool { self.is_renew_logs }
 
-    /// print help to console
     pub fn print_help(&self) {
         println!("\n\n{} - Version {}", _PKG_NAME, _PKG_VERSION);
         println!("\nusage: {} [OPTIONS] \

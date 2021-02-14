@@ -12,7 +12,7 @@ pub struct IniIo {
 }
 
 impl IniIo {
-    /// load .ini file (utf16bom) to string
+    /// Read .ini file (utf16bom) to string
     pub fn new(filename: &str) -> Result<Self, i32> {
         let hfile = match File::open(&filename) {
             Ok(h) => h,
@@ -34,7 +34,7 @@ impl IniIo {
         Ok(Self { data })
     }
 
-    /// return line string in match number from ini
+    /// Return line string in match number from ini
     pub fn get_match_number_line(&self, number: &str) -> String {
         let pat = format!(r"(?m)^\d={};.*$", fix_number(&number));
         let re = Regex::new(&pat).unwrap();
@@ -45,11 +45,10 @@ impl IniIo {
         hit_line
     }
 
-    /// return renewed number line
+    /// Return renewed line string
     pub fn make_new_number_line(old_line: &str, new_name: &str) -> String {
         let v: Vec<&str> = old_line.split(';').collect();
         if v.len() != 6 { return "".to_string(); };
-        // let mut new_line = String::with_capacity(old_line.len() + new_name.len());
         let fix_new_name = new_name.replace(";", "");
         let new_line = format!(
             "{};{};{};{};{};{}", v[0], fix_new_name, v[2], v[3], v[4], v[5],
@@ -57,19 +56,19 @@ impl IniIo {
         new_line
     }
 
-    /// replace ini string
+    /// Replace ini string
     pub fn replace(&mut self, old_line: &str, new_line: &str) {
         self.data = self.data.replace(old_line, new_line);
     }
 
-    /// save ini file
+    /// Save ini file
     pub fn save(&self, filename: &str) -> Result<(), i32> {
         let hfile = match File::create(&filename) {
             Ok(h ) => h,
             _ => return Err(_ERR_FILE_NOT_FOUND),
         };
         let mut writer = BufWriter::new(&hfile);
-        // write Utf16 encoded ini buffer
+        // Write Utf16 encoded ini buffer
         let vec_u16: Vec<u16> = self.data.encode_utf16().collect();
         for uu in &vec_u16 {
             if let Err(_) = writer.write_u16(*uu) {
@@ -78,5 +77,4 @@ impl IniIo {
         }
         Ok(())
     }
-
 }

@@ -11,7 +11,7 @@ use error_flg::*;
 use vcf_parser::*;
 use arg_and_help::*;
 
-/// touch output file with overwrite or append
+/// Touch output file with overwrite or append
 pub fn create_file(filename: &str, is_append: bool) -> Result<File, i32> {
     match OpenOptions::new()
         .create(true)
@@ -25,17 +25,17 @@ pub fn create_file(filename: &str, is_append: bool) -> Result<File, i32> {
     }
 }
 
-/// return filename + ".tmp"
+/// Return filename + ".tmp"
 pub fn make_tmp_filename(filename: &str) -> String {
     format!("{}.tmp", &filename)
 }
 
-/// delete file
+/// Delete file
 pub fn delete_file(filename: &str) {
     if let Err(_) = remove_file(&filename) {()};
 }
 
-/// file backup with auto increment filename
+/// File backup with auto increment filename
 pub fn file_backup(filename: &str) -> Result<(), i32> {
     let bup_filename = get_new_bup_filename(&filename);
     match copy(&filename, &bup_filename) {
@@ -44,9 +44,9 @@ pub fn file_backup(filename: &str) -> Result<(), i32> {
     }
 }
 
-/// return file list on same file path
+/// Return file list on same file path
 pub fn get_filelist_same_dir(filename: &str) -> Option<Vec<String>> {
-    // get Dirs
+    // Get Dirs
     let path = match Path::new(&filename).parent() {
         Some(p) =>  p.to_str().map_or("", |s| s),
         _ => { return None; },
@@ -55,7 +55,7 @@ pub fn get_filelist_same_dir(filename: &str) -> Option<Vec<String>> {
         Ok(d) => d,
         _ => { return None; },
     };
-    // detect files
+    // Detect files
     let mut files: Vec<String> = Vec::new();
     for entry in dirs {
         let one_entry = match entry {
@@ -71,14 +71,14 @@ pub fn get_filelist_same_dir(filename: &str) -> Option<Vec<String>> {
     Some(files)
 }
 
-/// make and return new self backup file name
+/// Return maked new self backup file name
 pub fn get_new_bup_filename(filename: &str) -> String {
     let mut last_number = 0;
     let files = match get_filelist_same_dir(&filename) {
         Some(v) =>  v,
         _ => { return format!("{}.bup0001", &filename); },
     };
-    // detect last number
+    // Detect last number
     let escaped_filename = regex::escape(&filename);
     let pat = format!(r"{}.bup([0-9]{{4}})+", &escaped_filename);
     let re = Regex::new(&pat).unwrap();
@@ -96,7 +96,7 @@ pub fn get_new_bup_filename(filename: &str) -> String {
     format!("{}.bup{:04}", &filename, last_number)
 }
 
-/// check i/o files exists
+/// Check required files exists
 pub fn is_exists_io_files(args: &Args) -> bool {
     Path::new(args.load_file_name()).is_file() && Path::new(args.save_file_name()).is_file()
 }

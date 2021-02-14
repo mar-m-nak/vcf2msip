@@ -6,7 +6,7 @@ use crate::vcf_parser;
 use error_flg::*;
 use vcf_parser::*;
 
-/// existing original sip contacts
+/// Existing original sip contacts
 #[derive(Debug)]
 pub struct SipContacts {
     data: Vec<(String, String, String)>, // number(numeric only), number(original), name
@@ -14,13 +14,13 @@ pub struct SipContacts {
 
 impl SipContacts {
 
-    /// return empty for no merge mode
+    /// Return empty for no merge mode
     pub fn empty() -> Self {
         let sip_vec: Vec<(String, String, String)> = Vec::new();
         Self{ data: sip_vec }
     }
 
-    /// return original sip contact
+    /// Return original sip contact
     pub fn new(filename: &str) -> Result<Self, i32> {
         let hfile = match File::open(&filename) {
             Ok(h) => h,
@@ -45,17 +45,17 @@ impl SipContacts {
         Ok( Self{ data: sip_vec } )
     }
 
-    /// data getter
+    /// Data getter
     pub fn data(&self) -> &Vec<(String, String, String)> {
         &self.data.as_ref()
     }
 
-    /// empty is no merge
+    /// Empty is no merge
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
 
-    /// clear buffer in sip contact if phone number exist
+    /// Clear buffer in sip contact, if phone number exist
     pub fn clear_exist(&mut self, number: &str) {
         let mut idx = 0;
         let mut clr_idx: Vec<usize> = Vec::new();
