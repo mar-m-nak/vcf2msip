@@ -50,7 +50,6 @@ impl SipContacts {
         &self.data.as_ref()
     }
 
-    /// Empty is no merge
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
@@ -70,5 +69,30 @@ impl SipContacts {
             self.data[idx].1.clear();
             self.data[idx].2.clear();
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    const TEST_XML_FILENAME: &'static str = r".\testfiles\test.xml";
+
+    #[test]
+    fn test_xml_parse() {
+        let mut scs = SipContacts::new(TEST_XML_FILENAME).unwrap();
+        assert_eq!(
+            ("445566".to_string(), "44-55-66".to_string(), "BBB".to_string()),
+            scs.data[1]
+        );
+        scs.clear_exist("112233");
+        scs.clear_exist("77-88-99");
+        assert_eq!(
+            vec!(
+                ("".to_string(), "".to_string(), "".to_string()),
+                ("445566".to_string(), "44-55-66".to_string(), "BBB".to_string()),
+                ("".to_string(), "".to_string(), "".to_string())
+            ),
+            scs.data
+        );
     }
 }
