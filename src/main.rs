@@ -169,16 +169,16 @@ fn output_xml_file(
         let initial = ct.name_index();
         for tel in ct.tel_iter() {
             pc.all_telephone += 1;
-            let number = tel.get_number();
-            let tel_type = tel.get_type();
+            let number = tel.number();
             // Clear original contact for merge
             if !sip_contacts.is_empty() {
-                sip_contacts.clear_exist(&number);
+                sip_contacts.clear_exist(number);
             };
             // Write one element
-            let fmt_name = ct.fmt_name(&args.name_pattern_normal(), &initial, tel_type)
-                .replace("\"", "&quot;");
-            if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&fmt_name, &number)) {
+            let new_name = ct.fmt_name(
+                &args.name_pattern_normal(), &initial, tel.teltype()
+            ).replace("\"", "&quot;");
+            if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&new_name, number)) {
                 continue;
             }
             pc.telphone += 1;
@@ -218,11 +218,11 @@ fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) -> ProcCounter {
         let initial = ct.name_index();
         for tel in ct.tel_iter() {
             // Replace buffer
-            let old_line = ini_io.get_match_number_line(tel.get_number());
+            let old_line = ini_io.get_match_number_line(tel.number());
             if !old_line.is_empty() {
-                let tel_type = tel.get_type();
-                let new_name = ct.fmt_name(&args.name_pattern_logs(), &initial, tel_type)
-                    .replace(";", "|");
+                let new_name = ct.fmt_name(
+                    &args.name_pattern_logs(), &initial, tel.teltype()
+                ).replace(";", "|");
                 let new_line = IniIo::make_new_number_line(&old_line, &new_name);
                 if !new_line.is_empty() {
                     ini_io.replace(&old_line, &new_line);

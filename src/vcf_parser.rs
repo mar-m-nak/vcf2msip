@@ -142,10 +142,10 @@ impl Contact {
     }
 
     /// Return formated name from pattern
-    pub fn fmt_name(&self, name_pattern: &str, initial: &str, tel_type: &str) -> String {
+    pub fn fmt_name(&self, name_pattern: &str, initial: &str, teltype: &str) -> String {
         name_pattern
             .replace(ARG_PAT_NAME, &self.full_name())
-            .replace(ARG_PAT_TEL_TYPE, tel_type)
+            .replace(ARG_PAT_TEL_TYPE, teltype)
             .replace(ARG_PAT_CATEGORIES, &self.categories)
             .replace(ARG_PAT_INITIAL, initial)
             .replace("()", "")
@@ -155,10 +155,10 @@ impl Contact {
 }
 
 impl Telephone {
-    pub fn get_type(&self) -> &str {
+    pub fn teltype(&self) -> &str {
         self.teltype.as_ref()
     }
-    pub fn get_number(&self) -> &str {
+    pub fn number(&self) -> &str {
         self.number.as_ref()
     }
 }
