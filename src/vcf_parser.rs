@@ -83,19 +83,34 @@ impl Contact {
 
     /// Capture telephones type and number
     fn cap_tel_numbers(vcard: &str) -> Vec<Telephone> {
-        let re = Regex::new(r"(?m)^[item\d\.]*TEL(;TYPE=([a-zA-Z]*))*:(.*)$").unwrap();
+        let re = Regex::new(r"(?m)^(item\d)*[\.]*TEL(;TYPE=([a-zA-Z]*))*:(.*)$").unwrap();
         let mut vec_telnums:Vec<Telephone> = Vec::new();
         for cap in re.captures_iter(&vcard) {
-            let teltype = cap.get(2).map_or("", |m| m.as_str());
-            let number = cap.get(3).map_or("", |m| m.as_str());
+            let number = cap.get(4).map_or("", |m| m.as_str());
+            let mut teltype = cap.get(3).map_or("", |m| m.as_str()).to_string();
+            if teltype.is_empty() {
+                let item = cap.get(1).map_or("", |m| m.as_str());
+                teltype = Self::find_item_label(&vcard, item);
+            }
             if number != "" { vec_telnums.push(
                 Telephone{
-                    teltype: teltype.to_string(),
+                    teltype: teltype,
                     number: number.trim_end().to_string(),
                 }
             ); }
         }
         vec_telnums
+    }
+
+    /// Find X-ABLabel for against item
+    fn find_item_label(vcard: &str, item: &str) -> String {
+        let pat = format!(r"(?m)^{}.X-ABLabel:(.*)$", item);
+        let re = Regex::new(&pat).unwrap();
+        let res = match re.captures(&vcard) {
+            Some(cap) => cap.get(1).map_or("", |m| m.as_str()),
+            None => "",
+        };
+        res.trim_end().to_string()
     }
 
     /// Check telephone number is empty
@@ -113,6 +128,7 @@ impl Contact {
     }
 
     /// Return initial from last or full or org name
+    // TODO: 苗字と名前
     pub fn name_index(&self) -> String {
         let target_name = if !self.xlast_name.is_empty() {
             &self.xlast_name
@@ -163,3 +179,29 @@ impl Telephone {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::*;
+    const TEST_VCF_FILENAME: &'static str = r".\testfiles\test.vcf";
+
+    #[test]
+    fn test_vcf_parse() {
+        let vcf = Vcf::new(TEST_VCF_FILENAME).unwrap();
+        let vcs = vcf.get_vcards();
+        let ct = Contact::new(&vcs[0]);
+        assert_eq!("Taro Yamada", ct.full_name());
+        let tels  = ct.tel_numbers;
+        assert_eq!("1234", tels[1].number);
+        assert_eq!("WORK", tels[1].teltype);
+        assert_eq!("11-22-33", tels[2].number);
+        assert_eq!("", tels[2].teltype);
+        assert_eq!("55-66-77", tels[3].number);
+        assert_eq!("homeFax", tels[3].teltype);
+        let ct = Contact::new(&vcs[1]);
+        assert_eq!("太宰治", ct.full_name());
+        assert_eq!("だ", ct.name_index());
+        let ct = Contact::new(&vcs[2]);
+        assert_eq!("CORPCORP", ct.full_name());
+        assert_eq!("Business", ct.categories);
+    }
+}
