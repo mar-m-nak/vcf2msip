@@ -7,10 +7,11 @@ pub const ARG_OVERWRITE: &'static [&'static str] = &["-n", "--no-bup"];
 pub const ARG_RENEWLOGS: &'static [&'static str] = &["-r", "--renew-logs"];
 
 pub const ARG_PAT_NAME: &'static str = "%name%";
-pub const ARG_PAT_INITIAL: &'static str = "%initial%";
+pub const ARG_PAT_FIRST_INITIAL: &'static str = "%finitial%";
+pub const ARG_PAT_LAST_INITIAL: &'static str = "%linitial%";
 pub const ARG_PAT_TEL_TYPE: &'static str = "%tel_type%";
 pub const ARG_PAT_CATEGORIES: &'static str = "%categories%";
-pub const ARG_PAT_DEFAULT: &'static str = "%initial% - %name% (%tel_type%)";
+pub const ARG_PAT_DEFAULT: &'static str = "%linitial% - %name% (%tel_type%)";
 pub const ARG_PAT_LOGS_DEFAULT: &'static str = "%name% (%tel_type%)";
 
 const _PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -126,7 +127,8 @@ impl Args {
         println!("- Default 1: \"{}\"", ARG_PAT_DEFAULT);
         println!("- Default 2: \"{}\"", ARG_PAT_LOGS_DEFAULT);
         println!("{:?}\t... Full name or Organization name.", ARG_PAT_NAME);
-        println!("{:?}\t... Initial of %name%", ARG_PAT_INITIAL);
+        println!("{:?}\t... Initial of first name or %name%", ARG_PAT_FIRST_INITIAL);
+        println!("{:?}\t... Initial of last name or %name%", ARG_PAT_LAST_INITIAL);
         println!("{:?}\t... Telephone type.", ARG_PAT_TEL_TYPE);
         println!("{:?}\t... Categories string.", ARG_PAT_CATEGORIES);
         println!("\n");

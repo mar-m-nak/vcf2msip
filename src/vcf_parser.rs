@@ -6,7 +6,7 @@ pub use std::io::{BufReader, Read};
 use kanaria::{string::UCSStr, utils::ConvertTarget};
 pub use regex::Regex;
 use error_flg::*;
-use arg_and_help::{ARG_PAT_NAME, ARG_PAT_INITIAL, ARG_PAT_CATEGORIES, ARG_PAT_TEL_TYPE};
+use arg_and_help::{ARG_PAT_NAME, ARG_PAT_FIRST_INITIAL, ARG_PAT_LAST_INITIAL, ARG_PAT_CATEGORIES, ARG_PAT_TEL_TYPE};
 
 #[derive(Debug)]
 pub struct Telephone {
@@ -127,12 +127,21 @@ impl Contact {
         }
     }
 
-    /// Return initial from last or full or org name
-    // TODO: 苗字と名前
-    pub fn name_index(&self) -> String {
-        let target_name = if !self.xlast_name.is_empty() {
-            &self.xlast_name
-        } else if !self.full_name.is_empty() {
+    /// Return initial from First or Full or Org name
+    pub fn finitial(&self) -> String {
+        self.to_hira_initial(&self.xfirst_name)
+    }
+
+    /// Return initial from Last or Full or Org name
+    pub fn linitial(&self) -> String {
+        self.to_hira_initial(&self.xlast_name)
+    }
+
+    /// Return Japanese HIRAGANA fixed initial
+    fn to_hira_initial(&self, target_name: &str) -> String {
+        let target_name = if !target_name.is_empty() {
+            target_name
+        } else if !&self.full_name.is_empty() {
             &self.full_name
         } else {
             &self.organization
@@ -158,12 +167,15 @@ impl Contact {
     }
 
     /// Return formated name from pattern
-    pub fn fmt_name(&self, name_pattern: &str, initial: &str, teltype: &str) -> String {
+    pub fn fmt_name(
+        &self, name_pattern: &str, finitial: &str, linitial: &str, teltype: &str
+    ) -> String {
         name_pattern
             .replace(ARG_PAT_NAME, &self.full_name())
             .replace(ARG_PAT_TEL_TYPE, teltype)
             .replace(ARG_PAT_CATEGORIES, &self.categories)
-            .replace(ARG_PAT_INITIAL, initial)
+            .replace(ARG_PAT_FIRST_INITIAL, finitial)
+            .replace(ARG_PAT_LAST_INITIAL, linitial)
             .replace("()", "")
             .replace("[]", "")
             .trim().to_string()
@@ -199,9 +211,10 @@ mod test {
         assert_eq!("homeFax", tels[3].teltype);
         let ct = Contact::new(&vcs[1]);
         assert_eq!("太宰治", ct.full_name());
-        assert_eq!("だ", ct.name_index());
+        assert_eq!("だ", ct.linitial());
         let ct = Contact::new(&vcs[2]);
         assert_eq!("CORPCORP", ct.full_name());
+        assert_eq!("C", ct.linitial());
         assert_eq!("Business", ct.categories);
     }
 }

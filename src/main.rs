@@ -166,7 +166,8 @@ fn output_xml_file(
         // Parse one contact, Loop at telephone
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
-        let initial = ct.name_index();
+        let finitial = ct.finitial();
+        let linitial = ct.linitial();
         for tel in ct.tel_iter() {
             pc.all_telephone += 1;
             let number = tel.number();
@@ -176,7 +177,7 @@ fn output_xml_file(
             };
             // Write one element
             let new_name = ct.fmt_name(
-                &args.name_pattern_normal(), &initial, tel.teltype()
+                &args.name_pattern_normal(), &finitial, &linitial, tel.teltype()
             ).replace("\"", "&quot;");
             if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&new_name, number)) {
                 continue;
@@ -215,13 +216,14 @@ fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) -> ProcCounter {
         pgbar.progress();
         let ct = Contact::new(&vcard);
         if ct.is_empty() { continue; }
-        let initial = ct.name_index();
+        let finitial = ct.finitial();
+        let linitial = ct.linitial();
         for tel in ct.tel_iter() {
             // Replace buffer
             let old_line = ini_io.get_match_number_line(tel.number());
             if !old_line.is_empty() {
                 let new_name = ct.fmt_name(
-                    &args.name_pattern_logs(), &initial, tel.teltype()
+                    &args.name_pattern_logs(), &finitial, &linitial, tel.teltype()
                 ).replace(";", "|");
                 let new_line = IniIo::make_new_number_line(&old_line, &new_name);
                 if !new_line.is_empty() {
