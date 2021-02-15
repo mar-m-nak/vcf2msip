@@ -9,13 +9,15 @@ pub const ARG_RENEWLOGS: &'static [&'static str] = &["-r", "--renew-logs"];
 pub const ARG_PAT_NAME: &'static str = "%name%";
 pub const ARG_PAT_FIRST_INITIAL: &'static str = "%finitial%";
 pub const ARG_PAT_LAST_INITIAL: &'static str = "%linitial%";
-pub const ARG_PAT_TEL_TYPE: &'static str = "%tel_type%";
+pub const ARG_PAT_TEL_TYPE: &'static str = "%teltype%";
 pub const ARG_PAT_CATEGORIES: &'static str = "%categories%";
-pub const ARG_PAT_DEFAULT: &'static str = "%linitial% - %name% (%tel_type%)";
-pub const ARG_PAT_LOGS_DEFAULT: &'static str = "%name% (%tel_type%)";
+pub const ARG_PAT_DEFAULT: &'static str = "%linitial% - %name% (%teltype%)";
+pub const ARG_PAT_LOGS_DEFAULT: &'static str = "%name% (%teltype%)";
 
 const _PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const _PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
+const _PKG_AUTHORS: &'static str = env!("CARGO_PKG_AUTHORS");
+const _PKG_DESCRIPTION: &'static str = env!("CARGO_PKG_DESCRIPTION");
 
 #[derive(Debug, Default)]
 pub struct Args {
@@ -67,8 +69,8 @@ impl Args {
             // args.is_merge = true;
             // args.is_no_bup = true;
             // args.is_renew_logs = true;
-            // args.name_pattern_normal = r"%linitial% - %name% (%tel_type%)".to_string();
-            // args.name_pattern_logs = r"%name% (%tel_type%)".to_string();
+            // args.name_pattern_normal = r"%linitial% - %name% (%teltype%)".to_string();
+            // args.name_pattern_logs = r"%name% (%teltype%)".to_string();
         }
 
         // Set default name patttern
@@ -113,7 +115,8 @@ impl Args {
     pub fn is_renew_logs(&self) -> bool { self.is_renew_logs }
 
     pub fn print_help(&self) {
-        println!("\n\n{} - Version {}", _PKG_NAME, _PKG_VERSION);
+        println!("\n\n{} - Version {} : by {}", _PKG_NAME, _PKG_VERSION, _PKG_AUTHORS);
+        println!("{}", _PKG_DESCRIPTION);
         println!("\nusage: {} [OPTIONS] \
             \"path\\to\\load\\*.vcf\" \
             \"path\\to\\save\\Contacts.xml\" \
