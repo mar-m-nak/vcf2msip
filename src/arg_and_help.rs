@@ -35,43 +35,51 @@ impl Args {
     /// Set structue from console args
     pub fn get_params() -> Self {
         let mut args = Args::default();
-        let mut file_count = 0;
+        let mut usrtxt_count = 0;
+        let ms = MAIN_SEPARATOR.to_string();
         args.name_pattern_normal = ARG_PAT_DEFAULT.to_string();
         args.name_pattern_logs = ARG_PAT_LOGS_DEFAULT.to_string();
         for (i, arg) in env::args().enumerate() {
             if i == 0 { continue; }
-            if ARG_HELP.contains(&arg.as_ref()) {
-                args.is_help = true;
-            } else if ARG_MERGE.contains(&arg.as_ref()) {
-                args.is_merge = true;
-            } else if ARG_OVERWRITE.contains(&arg.as_ref()) {
-                args.is_no_bup = true;
-            } else if ARG_RENEWLOGS.contains(&arg.as_ref()) {
-                args.is_renew_logs = true;
-            } else {
-                let ms = MAIN_SEPARATOR.to_string();
-                if file_count == 0 {
-                    args.load_file_name = arg.replace("/", &ms);
-                } else if file_count == 1 {
-                    args.save_file_name = arg.replace("/", &ms);
-                } else if file_count == 2 {
-                    args.name_pattern_normal = arg;
-                } else if file_count == 3 {
-                    args.name_pattern_logs = arg;
-                } else {
-                    args.is_help = true;
+            if ARG_HELP.contains(&arg.as_ref()) { args.is_help = true; break; }
+            else if ARG_MERGE.contains(&arg.as_ref()) { args.is_merge = true; }
+            else if ARG_OVERWRITE.contains(&arg.as_ref()) { args.is_no_bup = true; }
+            else if ARG_RENEWLOGS.contains(&arg.as_ref()) { args.is_renew_logs = true; }
+            else {
+                match usrtxt_count {
+                    0 => args.load_file_name = arg.replace("/", &ms),
+                    1 => args.save_file_name = arg.replace("/", &ms),
+                    2 => args.name_pattern_normal = arg,
+                    3 => args.name_pattern_logs = arg,
+                    _ => { args.is_help = true; break; },
                 }
-                file_count += 1;
+                usrtxt_count += 1;
             }
         }
+        #[cfg(debug_assertions)] {
+            // Debug
+            // cargo run -- -m -r -n .\sandbox\contacts.vcf .\sandbox\Contacts.xml
+            // or ...
+            // args.is_help = false;
+            // usrtxt_count = 4;
+            // args.load_file_name = r".\sandbox\contacts.vcf".to_string();
+            // args.save_file_name = r".\sandbox\Contacts.xml".to_string();
+            // args.is_merge = true;
+            // args.is_no_bup = true;
+            // args.is_renew_logs = true;
+            // args.name_pattern_normal = r"%linitial% - %name% (%tel_type%)".to_string();
+            // args.name_pattern_logs = r"%name% (%tel_type%)".to_string();
+        }
+
         // Set default name patttern
-        if file_count == 3 {
+        if usrtxt_count == 3 {
             args.name_pattern_logs = ARG_PAT_LOGS_DEFAULT.to_string();
         }
-        // File arg miss match are help
-        if file_count < 2 || file_count > 4 {
+        // Out of file and name pattern arg count
+        if usrtxt_count < 2 || usrtxt_count > 4 {
             args.is_help = true;
         }
+        // Check file name
         if let Some(s) = Path::new(&args.load_file_name).extension() {
             let ext = s.to_str().map_or("", |s| s);
             if ext.to_lowercase().as_str() != "vcf" {

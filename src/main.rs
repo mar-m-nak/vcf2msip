@@ -50,8 +50,7 @@ impl ProcCounter {
 }
 
 fn main() {
-    // TODO: test
-    // cargo run -- -r .\sandbox\contacts.vcf .\sandbox\Contacts.xml
+    // cargo run -- -m -r -n .\sandbox\contacts.vcf .\sandbox\Contacts.xml
 
     let args = Args::get_params();
     if args.is_help() {
