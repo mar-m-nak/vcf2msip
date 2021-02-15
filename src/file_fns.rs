@@ -4,26 +4,12 @@ use crate::arg_and_help;
 
 pub use std::path::MAIN_SEPARATOR;
 pub use std::{env, path::Path};
-pub use std::fs::{OpenOptions, copy, read_dir, remove_file, rename};
+pub use std::fs::{copy, read_dir, remove_file, rename};
 pub use std::io::prelude::*;
 
 use error_flg::*;
 use vcf_parser::*;
 use arg_and_help::*;
-
-/// Touch output file with overwrite or append
-pub fn create_file(filename: &str, is_append: bool) -> Result<File, i32> {
-    match OpenOptions::new()
-        .create(true)
-        .write(true)
-        .append(is_append)
-        .truncate(!is_append)
-        .open(&filename)
-    {
-        Ok(h) => Ok(h),
-        _ => Err(_ERR_CREATE_FILE),
-    }
-}
 
 /// Return filename + ".tmp"
 pub fn make_tmp_filename(filename: &str) -> String {

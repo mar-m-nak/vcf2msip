@@ -51,7 +51,7 @@ impl ProcCounter {
 
 fn main() {
     // TODO: test
-    // cargo run -- -r .\testfiles\contacts.vcf .\testfiles\Contacts.xml
+    // cargo run -- -r .\sandbox\contacts.vcf .\sandbox\Contacts.xml
 
     let args = Args::get_params();
     if args.is_help() {
@@ -90,9 +90,9 @@ fn conv(args: &Args) -> Result<(), i32> {
 
     // Output new xml to temporaly file
     let tmp_filename = make_tmp_filename(&args.save_file_name());
-    let mut hfile = match create_file(&tmp_filename, false) {
+    let mut hfile = match File::create(&tmp_filename) {
         Ok(h) => h,
-        Err(e) => { return Err(e); }
+        Err(_) => { return Err(_ERR_CREATE_FILE); }
     };
     let mut pc = ProcCounter::default();
     match output_xml_file(&vcf, &args,&mut hfile, &mut sip_contacts) {
