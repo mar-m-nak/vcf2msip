@@ -34,15 +34,15 @@ impl IniIo {
         Ok(Self { data })
     }
 
-    /// Return line string in match number from ini
-    pub fn get_match_number_line(&self, number: &str) -> String {
-        let pat = format!(r"(?m)^\d={};.*$", fix_number(&number));
+    /// Return lines in match number from ini
+    pub fn get_match_number_lines(&self, number: &str) -> Vec<String> {
+        let pat = format!(r"(?m)^[\d]+={};.*$", fix_number(&number));
         let re = Regex::new(&pat).unwrap();
-        let hit_line = match re.captures(&self.data) {
-            None => { return  "".to_string() },
-            Some(s) => { s[0].trim_end().to_string() },
-        };
-        hit_line
+        let mut number_lines: Vec<String> = Vec::new();
+        for cap in re.captures_iter(&self.data) {
+            number_lines.push(cap[0].trim_end().to_string());
+        }
+        number_lines
     }
 
     /// Return renewed line string
