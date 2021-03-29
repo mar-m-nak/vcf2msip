@@ -12,7 +12,6 @@ pub const ARG_PAT_LAST_INITIAL: &'static str = "%linitial%";
 pub const ARG_PAT_TEL_TYPE: &'static str = "%teltype%";
 pub const ARG_PAT_CATEGORIES: &'static str = "%categories%";
 pub const ARG_PAT_DEFAULT: &'static str = "%linitial% - %name% (%teltype%)";
-pub const ARG_PAT_LOGS_DEFAULT: &'static str = "%name% (%teltype%)";
 
 const _PKG_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const _PKG_NAME: &'static str = env!("CARGO_PKG_NAME");
@@ -25,7 +24,6 @@ pub struct Args {
     save_file_name: String,
     microsip_ini_file: String,
     name_pattern_normal: String,
-    name_pattern_logs: String,
     is_help: bool,
     is_merge: bool,
     is_no_bup: bool,
@@ -40,7 +38,6 @@ impl Args {
         let mut usrtxt_count = 0;
         let ms = MAIN_SEPARATOR.to_string();
         args.name_pattern_normal = ARG_PAT_DEFAULT.to_string();
-        args.name_pattern_logs = ARG_PAT_LOGS_DEFAULT.to_string();
         for (i, arg) in env::args().enumerate() {
             if i == 0 { continue; }
             if ARG_HELP.contains(&arg.as_ref()) { args.is_help = true; break; }
@@ -52,7 +49,6 @@ impl Args {
                     0 => args.load_file_name = arg.replace("/", &ms),
                     1 => args.save_file_name = arg.replace("/", &ms),
                     2 => args.name_pattern_normal = arg,
-                    3 => args.name_pattern_logs = arg,
                     _ => { args.is_help = true; break; },
                 }
                 usrtxt_count += 1;
@@ -70,13 +66,8 @@ impl Args {
             // args.is_no_bup = true;
             // args.is_renew_logs = true;
             // args.name_pattern_normal = r"%linitial% - %name% (%teltype%)".to_string();
-            // args.name_pattern_logs = r"%name% (%teltype%)".to_string();
         }
 
-        // Set default name patttern
-        if usrtxt_count == 3 {
-            args.name_pattern_logs = ARG_PAT_LOGS_DEFAULT.to_string();
-        }
         // Out of file and name pattern arg count
         if usrtxt_count < 2 || usrtxt_count > 4 {
             args.is_help = true;
@@ -108,7 +99,6 @@ impl Args {
     pub fn save_file_name(&self) -> &str { self.save_file_name.as_ref() }
     pub fn microsip_ini_file(&self) -> &str { self.microsip_ini_file.as_ref() }
     pub fn name_pattern_normal(&self) -> &str { self.name_pattern_normal.as_ref() }
-    pub fn name_pattern_logs(&self) -> &str { self.name_pattern_logs.as_ref() }
     pub fn is_help(&self) -> bool { self.is_help }
     pub fn is_merge(&self) -> bool { self.is_merge }
     pub fn is_no_bup(&self) -> bool { self.is_no_bup }
@@ -120,23 +110,19 @@ impl Args {
         println!("\nusage: {} [OPTIONS] \
             \"path\\to\\load\\*.vcf\" \
             \"path\\to\\save\\Contacts.xml\" \
-            [\"%PATTERN1%\"] \
-            [\"%PATTERN2%\"]",
+            [\"%PATTERN%\"]",
             _PKG_NAME
         );
         println!("\n---- OPTIONS ----");
-        println!("{:?}\t... Merge from exist MicroSIP contacts too. Default:no merge.", ARG_MERGE);
-        println!("{:?}\t... Not create backup. Default:create.", ARG_OVERWRITE);
-        println!("{:?}\t... Renew name in logs tab. Default:no touch.", ARG_RENEWLOGS);
+        println!("{:?}\t... Merge from exist MicroSIP contacts too. Default: no merge.", ARG_MERGE);
+        println!("{:?}\t... Do not create backup. Default: create backup.", ARG_OVERWRITE);
+        println!("{:?}\t... Renew name in logs tab. Default: no touch.", ARG_RENEWLOGS);
         println!("{:?} ... This message.", ARG_HELP);
-        println!("\n---- PATTERN1&2 ----");
+        println!("\n---- PATTERN ----");
         println!("- Pattern of convert to name from vcf contact.");
-        println!("- PATTERN1 apply to Name column in MicroSIP contacts tab.");
-        println!("- PATTERN2 apply to Name column in MicroSIP logs tab.");
-        println!("- If omit PATTERN2 then applies PATTERN1 to PATTERN2.");
+        println!("- Apply to Name column in MicroSIP contacts (and logs if --renew-logs) tab.");
         println!("- Emptied () and [] are remove at all last.");
-        println!("- Default 1: \"{}\"", ARG_PAT_DEFAULT);
-        println!("- Default 2: \"{}\"", ARG_PAT_LOGS_DEFAULT);
+        println!("- Default: \"{}\"", ARG_PAT_DEFAULT);
         println!("{:?}\t... Full name or Organization name.", ARG_PAT_NAME);
         println!("{:?}\t... Initial of first name or %name%", ARG_PAT_FIRST_INITIAL);
         println!("{:?}\t... Initial of last name or %name%", ARG_PAT_LAST_INITIAL);

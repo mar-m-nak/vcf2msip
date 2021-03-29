@@ -221,7 +221,7 @@ fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) -> ProcCounter {
             // Replace buffer
             for old_line in ini_io.get_match_number_lines(tel.number()) {
                 let new_name = ct.fmt_name(
-                    &args.name_pattern_logs(), &finitial, &linitial, tel.teltype()
+                    &args.name_pattern_normal(), &finitial, &linitial, tel.teltype()
                 ).replace(";", "|");
                 let new_line = IniIo::make_new_number_line(&old_line, &new_name);
                 if !new_line.is_empty() {

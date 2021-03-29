@@ -1,6 +1,6 @@
 [package]
 name = "vcf2msip"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["marm.nakamura"]
 edition = "2018"
 description = "Google contacts (.vcf:iOS) to MicroSIP contacts converter."
