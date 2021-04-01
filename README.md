@@ -6,7 +6,7 @@ Google contacts (.vcf:iOS) to MicroSIP contacts converter, for Windows.
 > MicroSIP - open source portable SIP softphone based on PJSIP stack for Windows OS.  
 > https://www.microsip.org/
 
-# Install
+## Install
 Place the executable file in any path.
 vcf2msip is don't use the registry.
 
