@@ -45,6 +45,8 @@ and over write to this
     C:\Users\<USERNAME>\AppData\Roaming\MicroSIP\MicroSIP.ini
 
 ## Screen shot
+![MicroSIP contacts tab](./vcf2msip_execute.png)
+
 ![MicroSIP contacts tab](./vcf2msip_microsip-contact-tab.png)
 
 ## License
