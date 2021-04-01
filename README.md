@@ -13,13 +13,13 @@ vcf2msip is don't use the registry.
 ## Usage
 vcf2msip [OPTIONS] "path\to\load\*.vcf" "path\to\save\Contacts.xml" ["%PATTERN%"]
 
----- OPTIONS ----
+---- OPTIONS ----  
 ["-m", "--merge"]       ... Merge from exist MicroSIP contacts too. Default: no merge.  
 ["-n", "--no-bup"]      ... Do not create backup. Default: create backup.  
 ["-r", "--renew-logs"]  ... Renew name in logs tab. Default: no touch.  
 ["-h", "-v", "--help", "--version"] ... This message.  
 
----- PATTERN ----
+---- PATTERN ----  
 - Pattern of convert to name from vcf contact.
 - Apply to Name column in MicroSIP contacts (and logs, if --renew-logs) tab.
 - Emptied () and [] are remove at all last.
