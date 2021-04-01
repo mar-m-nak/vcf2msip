@@ -23,7 +23,7 @@ vcf2msip [OPTIONS] "path\to\load\*.vcf" "path\to\save\Contacts.xml" ["%PATTERN%"
 - Pattern of convert to name from vcf contact.
 - Apply to Name column in MicroSIP contacts (and logs, if --renew-logs) tab.
 - Emptied () and [] are remove at all last.
-- Default: "%linitial% - %name% (%teltype%)"
+- Default: "%linitial% - %name% (%teltype%)"  
 "%name%"        ... Full name or Organization name.  
 "%finitial%"    ... Initial of first name or %name%  
 "%linitial%"    ... Initial of last name or %name%  
