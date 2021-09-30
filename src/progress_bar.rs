@@ -34,7 +34,13 @@ impl ProgressBar {
         if !is_done {
             print!("] {}/{}", self.pg, self.max);
         } else {
-            print!("] Done!{:1$}\n", " ", self.end_str_len - 7);
+            let done_str = "] Done!";
+            let spc = if self.end_str_len < done_str.len() {
+                0
+            } else {
+                self.end_str_len - done_str.len()
+            };
+            println!("{msg}{:1$}", " ", spc, msg = done_str);
         }
     }
 }
