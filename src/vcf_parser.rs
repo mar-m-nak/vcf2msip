@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::error_flg;
 use crate::arg_and_help;
 
