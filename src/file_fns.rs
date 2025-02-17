@@ -57,7 +57,7 @@ pub fn get_filelist_same_dir(filename: &str) -> Option<Vec<String>> {
     Some(files)
 }
 
-/// Return maked new self backup file name
+/// Return made new self backup file name
 pub fn get_new_bup_filename(filename: &str) -> String {
     let mut last_number = 0;
     let files = match get_filelist_same_dir(&filename) {

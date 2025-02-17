@@ -1,7 +1,7 @@
 use crate::error_flg;
 use crate::vcf_parser;
 
-use std::io::{BufWriter};
+use std::io::BufWriter;
 use error_flg::*;
 use vcf_parser::*;
 use file_utils::write::Write as fu_write;
