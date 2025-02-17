@@ -32,7 +32,7 @@ pub struct Args {
 
 impl Args {
 
-    /// Set structue from console args
+    /// Set structure from console args
     pub fn get_params() -> Self {
         let mut args = Args::default();
         let mut usrtxt_count = 0;

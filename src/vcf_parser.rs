@@ -168,7 +168,7 @@ impl Contact {
             .replace("%number%", number)
     }
 
-    /// Return formated name from pattern
+    /// Return formatted name from pattern
     pub fn fmt_name(
         &self, name_pattern: &str, finitial: &str, linitial: &str, teltype: &str
     ) -> String {

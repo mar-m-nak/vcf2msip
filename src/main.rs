@@ -3,7 +3,7 @@ mod ini_io;
 mod error_flg;
 mod arg_and_help;
 mod file_fns;
-mod xml_perser;
+mod xml_parser;
 mod progress_bar;
 
 use std::process::exit;
@@ -12,7 +12,7 @@ use ini_io::*;
 use error_flg::*;
 use arg_and_help::*;
 use file_fns::*;
-use xml_perser::*;
+use xml_parser::*;
 use progress_bar::*;
 
 #[derive(Default)]
@@ -20,7 +20,7 @@ struct ProcCounter {
     all_contact: usize,
     all_telephone: usize,
     contact: usize,
-    telphone: usize,
+    telephone: usize,
     merge: usize,
     logs: usize,
 }
@@ -30,7 +30,7 @@ impl ProcCounter {
         self.all_contact += pc.all_contact;
         self.all_telephone += pc.all_telephone;
         self.contact += pc.contact;
-        self.telphone += pc.telphone;
+        self.telephone += pc.telephone;
         self.merge += pc.merge;
         self.logs += pc.logs;
     }
@@ -42,7 +42,7 @@ impl ProcCounter {
         println!(
             "PROCESSED [Contact:{}, Telephone:{}, Merge:{}, RenewLogs:{}]",
             self.contact,
-            self.telphone,
+            self.telephone,
             self.merge,
             self.logs
         );
@@ -64,7 +64,7 @@ fn main() {
     };
 }
 
-/// Proccess of convert
+/// Process of convert
 fn conv(args: &Args) -> Result<(), i32> {
 
     if !is_exists_io_files(&args) {
@@ -87,7 +87,7 @@ fn conv(args: &Args) -> Result<(), i32> {
         Err(e) => { return Err(e); },
     };
 
-    // Output new xml to temporaly file
+    // Output new xml to temporary file
     let tmp_filename = make_tmp_filename(&args.save_file_name());
     let mut hfile = match File::create(&tmp_filename) {
         Ok(h) => h,
@@ -110,7 +110,7 @@ fn conv(args: &Args) -> Result<(), i32> {
             return Err(e);
         }
     }
-    // Apply tempolary file to true Contact.xml file
+    // Apply temporary file to true Contact.xml file
     if let Err(_) = rename(&tmp_filename, &args.save_file_name()) {
         delete_file(&tmp_filename);
         return Err(_ERR_FIX_FILE_COPY);
@@ -123,7 +123,7 @@ fn conv(args: &Args) -> Result<(), i32> {
             Ok(iniio) => iniio,
             Err(_) => { return Err(_ERR_DID_NOT_RUN_RENEW_LOGS) },
         };
-        // Output renewed buffer to tempolary file
+        // Output renewed buffer to temporary file
         pc.add_count(&renew_ini_buffer(&vcf, &args, &mut ini_io));
         let tmp_filename = make_tmp_filename(&args.microsip_ini_file());
         if let Err(e) = ini_io.save(&tmp_filename) {
@@ -137,7 +137,7 @@ fn conv(args: &Args) -> Result<(), i32> {
                 return Err(e);
             }
         }
-        // Apply tempolary file to true MicroSIP.ini file
+        // Apply temporary file to true MicroSIP.ini file
         match rename(&tmp_filename, &args.microsip_ini_file()) {
             Ok(()) => (),
             Err(_) => { return Err(_ERR_FIX_FILE_COPY); },
@@ -181,7 +181,7 @@ fn output_xml_file(
             if let Err(_) = writeln!(hfile, "{}\r", Contact::xml_line(&new_name, number)) {
                 continue;
             }
-            pc.telphone += 1;
+            pc.telephone += 1;
         }
         pc.contact += 1;
     }
