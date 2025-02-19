@@ -17,7 +17,8 @@ vcf2msip [OPTIONS] "path\to\load\*.vcf" "path\to\save\Contacts.xml" ["%PATTERN%"
 ["-m", "--merge"]       ... Merge from exist MicroSIP contacts too. Default: no merge.  
 ["-n", "--no-bup"]      ... Do not create backup. Default: create backup.  
 ["-r", "--renew-logs"]  ... Renew name in logs tab. Default: no touch.  
-["-h", "-v", "--help", "--version"] ... This message.  
+["-ca", "--output-csv-agephone"]        ... Just convert to CSV for AGEphone. Default: no.  
+["-h", "-v", "--help", "--version"]     ... This message.  
 
 ---- PATTERN ----  
 - Pattern of convert to name from vcf contact.
