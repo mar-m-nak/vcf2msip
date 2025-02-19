@@ -156,6 +156,34 @@ impl Contact {
         }
     }
 
+    /// Returns first category name
+    pub fn first_categories(&self) -> String {
+        let v: Vec<&str> = self.categories.split(',').collect();
+        v[0].to_string()
+    }
+
+    /// Return hiragana name from First or Full or Org name
+    pub fn first_hira_fullname(&self) -> String {
+        self.to_hira_name(&self.xfirst_name)
+    }
+
+    /// Return hiragana name from Last or Full or Org name
+    pub fn last_hira_fullname(&self) -> String {
+        self.to_hira_name(&self.xlast_name)
+    }
+
+    /// Return Japanese HIRAGANA fixed name
+    fn to_hira_name(&self, target_name: &str) -> String {
+        let target_name = if !target_name.is_empty() {
+            target_name
+        } else if !&self.full_name.is_empty() {
+            &self.full_name
+        } else {
+            &self.organization
+        };
+        UCSStr::from_str(&target_name).hiragana().to_string()
+    }
+
     /// Return telephones iterator
     pub fn tel_iter(&self) -> impl Iterator<Item = &Telephone> {
         self.tel_numbers.iter()

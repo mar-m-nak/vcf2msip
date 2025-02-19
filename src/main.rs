@@ -15,6 +15,9 @@ use file_fns::*;
 use xml_parser::*;
 use progress_bar::*;
 
+use encoding_rs::SHIFT_JIS;
+use std::io::{BufWriter, Write};
+
 #[derive(Default)]
 struct ProcCounter {
     all_contact: usize,
@@ -71,6 +74,34 @@ fn conv(args: &Args) -> Result<(), i32> {
         return Err(_ERR_FILE_NOT_FOUND);
     }
 
+    // Read vcf file
+    let vcf = match Vcf::new(&args.load_file_name()) {
+        Ok(vcf) => vcf,
+        Err(e) => { return Err(e); },
+    };
+
+    // Output AGEphone's csv file only
+    if args.is_output_csv_agephone() {
+        // cargo run -- -ca -n .\sandbox\contacts.vcf .\sandbox\Contacts.csv
+
+        let mut hfile = match File::create(&args.save_file_name()) {
+            Ok(h) => h,
+            Err(_) => { return Err(_ERR_CREATE_FILE); }
+        };
+        let mut pc = ProcCounter::default();
+        match output_age_phone_csv_file(&vcf, &args, &mut hfile) {
+            Ok(res_pc) => {
+                pc.add_count(&res_pc);
+            },
+            Err(e) => {
+                delete_file(&args.save_file_name());
+                return Err(e);
+            },
+        };
+        pc.print();
+        return Ok(())
+    }
+
     // Read MicroSIP Contacts.xml file
     let mut sip_contacts = if args.is_merge() {
         match SipContacts::new(&args.save_file_name()) {
@@ -79,12 +110,6 @@ fn conv(args: &Args) -> Result<(), i32> {
         }
     } else {
         SipContacts::empty()
-    };
-
-    // Read vcf file
-    let vcf = match Vcf::new(&args.load_file_name()) {
-        Ok(vcf) => vcf,
-        Err(e) => { return Err(e); },
     };
 
     // Output new xml to temporary file
@@ -232,4 +257,56 @@ fn renew_ini_buffer(vcf: &Vcf, args: &Args, ini_io: &mut IniIo) -> ProcCounter {
         }
     }
     pc
+}
+
+/// Write to AGEphone's csv file
+fn output_age_phone_csv_file(
+    vcf: &Vcf, args: &Args, hfile: &mut File
+) -> Result<ProcCounter, i32> {
+    let mut bfw = BufWriter::new(hfile);
+    // Loop on vcards
+    let mut pc = ProcCounter::default();
+    let vcf_vcards = vcf.get_vcards();
+    pc.all_contact = vcf_vcards.len();
+    let mut pgbar = ProgressBar::new("AGEphoneCSV", pc.all_contact);
+    for vcard in vcf_vcards {
+        pgbar.progress();
+        // Parse one contact, Loop at telephone
+        let ct = Contact::new(&vcard);
+        if ct.is_empty() { continue; }
+        let finitial = ct.finitial(); // かなFirst頭文字
+        let linitial = ct.linitial(); // かなLast頭文字
+        let hira_name = ct.last_hira_fullname() + " " + &ct.first_hira_fullname(); // ふりがな
+        for tel in ct.tel_iter() {
+            pc.all_telephone += 1;
+            let number = tel.number();
+            let new_name = ct.fmt_name(
+                &args.name_pattern_normal(), &finitial, &linitial, tel.teltype()
+            ).replace("\"", "&quot;");
+            // SJISで1行書き出す
+            let line = format!(
+                "{},{},{},{},{}\r\n",
+                new_name,
+                number,
+                ct.first_categories(),
+                hira_name,
+                match tel.teltype() {
+                    // "" => "1", // IP電話
+                    "HOME" => "2", // 一般電話
+                    "CELL" => "3", // 携帯電話
+                    "携帯" => "3", // 携帯電話
+                    "WORK" => "4", // ビジネス
+                    _ => "2"
+                }
+            );
+            let (sjis_line, _, _) = SHIFT_JIS.encode(&line);
+            if let Err(_) = bfw.write(&sjis_line) {
+                continue;
+            }
+
+            pc.telephone += 1;
+        }
+        pc.contact += 1;
+    }
+    Ok(pc)
 }

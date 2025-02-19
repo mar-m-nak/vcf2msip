@@ -5,7 +5,7 @@ use crate::arg_and_help;
 pub use std::path::MAIN_SEPARATOR;
 pub use std::{env, path::Path};
 pub use std::fs::{copy, read_dir, remove_file, rename};
-pub use std::io::prelude::*;
+// pub use std::io::prelude::*;
 
 use error_flg::*;
 use vcf_parser::*;
@@ -84,5 +84,8 @@ pub fn get_new_bup_filename(filename: &str) -> String {
 
 /// Check required files exists
 pub fn is_exists_io_files(args: &Args) -> bool {
+    if args.is_output_csv_agephone() {
+        return Path::new(args.load_file_name()).is_file()
+    }
     Path::new(args.load_file_name()).is_file() && Path::new(args.save_file_name()).is_file()
 }
